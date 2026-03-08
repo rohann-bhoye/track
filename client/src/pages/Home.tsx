@@ -90,8 +90,18 @@ export default function Home() {
             </h1>
             <p className="mt-4 text-lg text-muted-foreground text-balance">
               Keep a beautiful, secure log of your daily contributions across different companies. 
-              Only authorized personnel can add entries.
+              Track progress, mark tasks complete, and generate professional reports.
             </p>
+            {tasks && tasks.length > 0 && (
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link href="/tasks">
+                  <Button variant="outline" size="lg">
+                    View as Checklist
+                  </Button>
+                </Link>
+              </div>
+            )}
+            
           </div>
           
           <div className="flex-shrink-0 pt-4 md:pt-0">

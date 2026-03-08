@@ -1,24 +1,37 @@
 # Task Tracker Application
 
-A beautiful, secure daily task tracking application where you can log your work across different companies and generate professional work reports.
+A beautiful, secure daily task tracking application where you can log your work across different companies, track status, and generate professional work reports.
 
 ## Features
 
 ### ✅ Daily Task Logging
 - Add tasks for any company with date of join, task date, and detailed work description
+- **Auto-timestamps**: Date and time automatically recorded when task is created
 - Requires a secret code for authorization (prevents unauthorized additions)
 - Default secret code: `task123`
 
-### ✅ Task Viewing
-- **Grid View** (default): Cards showing all tasks with company, dates, and descriptions
-- **List View**: Compact view for easier scrolling
+### ✅ Task Status Tracking
+- **Two Status Options**: "In Progress" or "Completed"
+- **Auto-completion date**: When you mark a task as complete, the completion timestamp is automatically recorded
+- **Change status anytime**: Use the secret code to update status at any time
+- Click the status badge to toggle or update the status
+
+### ✅ Task Viewing - Multiple Views
+- **Grid View** (Home): Cards showing all tasks with company, dates, and descriptions
+- **Checklist View** (`/tasks`): Row-based list view perfect for daily tracking
+  - One task per row for easy scanning
+  - Status badge shows "In Progress" or "Completed"
+  - See creation date/time and completion date/time if applicable
+  - Quick status toggle with secret code
+- **List View**: Compact view with toggle between grid and list
 - Tasks sorted by date (newest first)
 
-### ✅ Work Report (NEW!)
+### ✅ Work Report
 - **Company-based Summary**: View all tasks organized by company
 - **Statistics Dashboard**: Shows total tasks, number of companies, and average tasks per company
 - **Daily Breakdown**: Each company section shows tasks sorted by date
-- Easy to share with managers/stakeholders when asked "What did you work on?"
+- Shows completion dates for completed tasks
+- Perfect to share with managers/stakeholders when asked "What did you work on?"
 
 ## Database Schema
 

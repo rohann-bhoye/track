@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createTaskRequestSchema, tasks } from './schema';
+import { createTaskRequestSchema, updateTaskStatusSchema, tasks } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -35,7 +35,18 @@ export const api = {
         400: errorSchemas.validation,
         401: errorSchemas.unauthorized,
       },
-    }
+    },
+    updateStatus: {
+      method: 'PATCH' as const,
+      path: '/api/tasks/:id/status' as const,
+      input: updateTaskStatusSchema,
+      responses: {
+        200: z.custom<typeof tasks.$inferSelect>(),
+        400: errorSchemas.validation,
+        401: errorSchemas.unauthorized,
+        404: errorSchemas.notFound,
+      },
+    },
   },
 };
 

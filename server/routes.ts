@@ -39,5 +39,34 @@ export async function registerRoutes(
     }
   });
 
+  app.patch(api.tasks.updateStatus.path, async (req, res) => {
+    try {
+      const taskId = Number(req.params.id);
+      const input = api.tasks.updateStatus.input.parse(req.body);
+
+      const expectedCode = process.env.SECRET_CODE || "task123";
+      
+      if (input.secretCode !== expectedCode) {
+        return res.status(401).json({ message: "Invalid secret code" });
+      }
+
+      const existingTask = await storage.getTasks().then(tasks => tasks.find(t => t.id === taskId));
+      if (!existingTask) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+
+      const updatedTask = await storage.updateTaskStatus(taskId, input.status);
+      res.json(updatedTask);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
   return httpServer;
 }
