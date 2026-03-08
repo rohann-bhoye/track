@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { ClipboardList, LayoutGrid, LayoutList, ListTodo, SearchX } from "lucide-react";
+import { ClipboardList, LayoutGrid, LayoutList, ListTodo, SearchX, BarChart3 } from "lucide-react";
 import { useState } from "react";
+import { Link } from "wouter";
 
 import { useTasks } from "@/hooks/use-tasks";
 import { TaskCard } from "@/components/TaskCard";
@@ -103,7 +104,7 @@ export default function Home() {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-24">
         
         {/* Toolbar */}
-        <div className="flex items-center justify-between py-6 border-b border-border/50 mb-8">
+        <div className="flex items-center justify-between py-6 border-b border-border/50 mb-8 flex-wrap gap-4">
           <div className="flex items-center gap-2">
             <ListTodo className="w-5 h-5 text-muted-foreground" />
             <h2 className="text-xl font-semibold text-foreground">Recent Activity</h2>
@@ -112,28 +113,38 @@ export default function Home() {
             </span>
           </div>
           
-          {hasTasks && (
-            <div className="flex bg-muted/50 p-1 rounded-lg border border-border/50">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className={`px-3 py-1.5 h-8 ${viewMode === 'grid' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'}`}
-                onClick={() => setViewMode("grid")}
-              >
-                <LayoutGrid className="w-4 h-4 mr-2" />
-                Grid
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className={`px-3 py-1.5 h-8 ${viewMode === 'list' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'}`}
-                onClick={() => setViewMode("list")}
-              >
-                <LayoutList className="w-4 h-4 mr-2" />
-                List
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {hasTasks && (
+              <div className="flex bg-muted/50 p-1 rounded-lg border border-border/50">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={`px-3 py-1.5 h-8 ${viewMode === 'grid' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'}`}
+                  onClick={() => setViewMode("grid")}
+                >
+                  <LayoutGrid className="w-4 h-4 mr-2" />
+                  Grid
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={`px-3 py-1.5 h-8 ${viewMode === 'list' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'}`}
+                  onClick={() => setViewMode("list")}
+                >
+                  <LayoutList className="w-4 h-4 mr-2" />
+                  List
+                </Button>
+              </div>
+            )}
+            {hasTasks && (
+              <Link href="/report">
+                <Button variant="outline" size="sm" className="h-8">
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  View Report
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Task Grid/List */}
