@@ -1,0 +1,287 @@
+
+> nextjs-app@0.1.0 build
+> next build
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\package-lock.json
+
+▲ Next.js 16.1.6 (Turbopack)
+
+  Creating an optimized production build ...
+Error: Cannot apply unknown utility class `border-border`. Are you using CSS modules or similar and missing `@reference`? https://tailwindcss.com/docs/functions-and-directives#reference-directive
+    [2m[at onInvalidCandidate (C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\node_modules\tailwindcss\dist\lib.js:21:1314)][0m
+    [2m[at Ee (C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\node_modules\tailwindcss\dist\lib.js:16:37066)][0m
+    [2m[at C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\node_modules\tailwindcss\dist\lib.js:21:355][0m
+    [2m[at Pr (C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\node_modules\tailwindcss\dist\lib.js:3:1733)][0m
+    [2m[at _ (C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\node_modules\tailwindcss\dist\lib.js:3:1377)][0m
+    [2m[at Te (C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\node_modules\tailwindcss\dist\lib.js:21:172)][0m
+    [2m[at pn (C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\node_modules\tailwindcss\dist\lib.js:38:294)][0m
+    [2m[at process.processTicksAndRejections (node:internal/process/task_queues:95:5)][0m
+    [2m[at async dn (C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\node_modules\tailwindcss\dist\lib.js:38:631)][0m
+    [2m[at async Xr (C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\node_modules\@tailwindcss\node\dist\index.js:10:3417)][0m
+Turbopack build encountered 2 warnings:
+./nextjs-app/tailwind.config.ts:106:45
+Module not found: Can't resolve '@tailwindcss/typography'
+[0m [90m 104 |[39m     }[33m,[39m
+ [90m 105 |[39m   }[33m,[39m
+[31m[1m>[22m[39m[90m 106 |[39m   plugins[33m:[39m [require([32m"tailwindcss-animate"[39m)[33m,[39m require([32m"@tailwindcss/typography"[39m)][33m,[39m
+ [90m     |[39m                                             [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 107 |[39m } satisfies [33mConfig[39m[33m;[39m
+ [90m 108 |[39m[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./nextjs-app/tailwind.config.ts:106:13
+Module not found: Can't resolve 'tailwindcss-animate'
+[0m [90m 104 |[39m     }[33m,[39m
+ [90m 105 |[39m   }[33m,[39m
+[31m[1m>[22m[39m[90m 106 |[39m   plugins[33m:[39m [require([32m"tailwindcss-animate"[39m)[33m,[39m require([32m"@tailwindcss/typography"[39m)][33m,[39m
+ [90m     |[39m             [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 107 |[39m } satisfies [33mConfig[39m[33m;[39m
+ [90m 108 |[39m[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+> Build error occurred
+Error: Turbopack build failed with 10 errors:
+./nextjs-app/src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\src\app\globals.css:1:1: Cannot apply unknown utility class `border-border`. Are you using CSS modules or similar and missing `@reference`? https://tailwindcss.com/docs/functions-and-directives#reference-directive
+    at Input.error (nextjs-app/node_modules/postcss/lib/input.js:135:16) [C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\.next\build\chunks\c727f_db555606._.js:4651:22]
+    at Root.error (nextjs-app/node_modules/postcss/lib/node.js:146:32) [C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\.next\build\chunks\c727f_db555606._.js:928:38]
+    [at Object.Once (C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\node_modules\@tailwindcss\postcss\dist\index.js:10:6913)]
+    [at process.processTicksAndRejections (node:internal/process/task_queues:95:5)]
+    at async LazyResult.runAsync (nextjs-app/node_modules/postcss/lib/lazy-result.js:293:11) [C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\.next\build\chunks\c727f_db555606._.js:6214:21]
+    at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34) [C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\.next\build\chunks\[root-of-the-server]__8f0d712c._.js:146:36]
+    at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23) [C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\.next\build\chunks\[root-of-the-server]__1cbb0b36._.js:443:31]
+
+Import trace:
+  Client Component Browser:
+    ./nextjs-app/src/app/globals.css [Client Component Browser]
+    ./nextjs-app/src/app/layout.tsx [Server Component]
+
+
+./nextjs-app/src/app/company/[name]/page.tsx:31:10
+Ecmascript file had an error
+[0m [90m 29 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m"@/components/ui/button"[39m[33m;[39m
+ [90m 30 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m"next/link"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 31 |[39m [36mimport[39m { useParams } [36mfrom[39m [32m"next/navigation"[39m[33m;[39m
+ [90m    |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 32 |[39m [36mimport[39m { [33mSkeleton[39m } [36mfrom[39m [32m"@/components/ui/skeleton"[39m[33m;[39m
+ [90m 33 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m"@/components/ui/badge"[39m[33m;[39m
+ [90m 34 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m } [36mfrom[39m [32m"@/components/ui/card"[39m[33m;[39m[0m
+
+You're importing a component that needs `useParams`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./nextjs-app/src/app/company/[name]/page.tsx:1:19
+Ecmascript file had an error
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { useMemo[33m,[39m useState } [36mfrom[39m [32m"react"[39m[33m;[39m
+ [90m   |[39m                   [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { format[33m,[39m parseISO[33m,[39m isValid } [36mfrom[39m [32m"date-fns"[39m[33m;[39m
+ [90m 3 |[39m [36mimport[39m { motion[33m,[39m [33mAnimatePresence[39m } [36mfrom[39m [32m"framer-motion"[39m[33m;[39m
+ [90m 4 |[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./nextjs-app/src/components/ui/dialog.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-dialog'
+[0m [90m 2 |[39m
+ [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m"react"[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mDialogPrimitive[39m [36mfrom[39m [32m"@radix-ui/react-dialog"[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { [33mX[39m } [36mfrom[39m [32m"lucide-react"[39m
+ [90m 6 |[39m
+ [90m 7 |[39m [36mimport[39m { cn } [36mfrom[39m [32m"@/lib/utils"[39m[0m
+
+
+
+Import traces:
+  Server Component:
+    ./nextjs-app/src/components/ui/dialog.tsx
+    ./nextjs-app/src/app/company/[name]/page.tsx
+
+  Client Component Browser:
+    ./nextjs-app/src/components/ui/dialog.tsx [Client Component Browser]
+    ./nextjs-app/src/components/CreateTaskModal.tsx [Client Component Browser]
+    ./nextjs-app/src/app/page.tsx [Client Component Browser]
+    ./nextjs-app/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./nextjs-app/src/components/ui/dialog.tsx [Client Component SSR]
+    ./nextjs-app/src/components/CreateTaskModal.tsx [Client Component SSR]
+    ./nextjs-app/src/app/page.tsx [Client Component SSR]
+    ./nextjs-app/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./nextjs-app/src/components/ui/select.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-select'
+[0m [90m 2 |[39m
+ [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m"react"[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mSelectPrimitive[39m [36mfrom[39m [32m"@radix-ui/react-select"[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { [33mCheck[39m[33m,[39m [33mChevronDown[39m[33m,[39m [33mChevronUp[39m } [36mfrom[39m [32m"lucide-react"[39m
+ [90m 6 |[39m
+ [90m 7 |[39m [36mimport[39m { cn } [36mfrom[39m [32m"@/lib/utils"[39m[0m
+
+
+
+Import traces:
+  Server Component:
+    ./nextjs-app/src/components/ui/select.tsx
+    ./nextjs-app/src/app/company/[name]/page.tsx
+
+  Client Component Browser:
+    ./nextjs-app/src/components/ui/select.tsx [Client Component Browser]
+    ./nextjs-app/src/components/CreateTaskModal.tsx [Client Component Browser]
+    ./nextjs-app/src/app/page.tsx [Client Component Browser]
+    ./nextjs-app/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./nextjs-app/src/components/ui/select.tsx [Client Component SSR]
+    ./nextjs-app/src/components/CreateTaskModal.tsx [Client Component SSR]
+    ./nextjs-app/src/app/page.tsx [Client Component SSR]
+    ./nextjs-app/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./nextjs-app/src/app/company/[name]/page.tsx:3:1
+Module not found: Can't resolve 'framer-motion'
+[0m [90m 1 |[39m [36mimport[39m { useMemo[33m,[39m useState } [36mfrom[39m [32m"react"[39m[33m;[39m
+ [90m 2 |[39m [36mimport[39m { format[33m,[39m parseISO[33m,[39m isValid } [36mfrom[39m [32m"date-fns"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m { motion[33m,[39m [33mAnimatePresence[39m } [36mfrom[39m [32m"framer-motion"[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 4 |[39m
+ [90m 5 |[39m [36mconst[39m safeFormatDate [33m=[39m (dateString[33m:[39m string [33m|[39m undefined [33m|[39m [36mnull[39m[33m,[39m formatStr[33m:[39m string) [33m=>[39m {
+ [90m 6 |[39m   [36mif[39m ([33m![39mdateString) [36mreturn[39m [32m"N/A"[39m[33m;[39m[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./nextjs-app/src/app/page.tsx:3:1
+Module not found: Can't resolve 'framer-motion'
+[0m [90m 1 |[39m [32m"use client"[39m[33m;[39m
+ [90m 2 |[39m
+[31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m { motion } [36mfrom[39m [32m"framer-motion"[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 4 |[39m [36mimport[39m { [33mClipboardList[39m[33m,[39m [33mBuilding2[39m[33m,[39m [33mBarChart3[39m[33m,[39m [33mBriefcase[39m[33m,[39m [33mSearchX[39m[33m,[39m [33mPlus[39m[33m,[39m [33mCalendar[39m [36mas[39m [33mCalendarIcon[39m[33m,[39m [33mFilter[39m[33m,[39m [33mLayers[39m[33m,[39m [33mCheckCircle2[39m[33m,[39m [33mClock[39m } [36mfrom[39m [32m"lucide-react"[39m[33m;[39m
+ [90m 5 |[39m [36mimport[39m { useMemo[33m,[39m useState } [36mfrom[39m [32m"react"[39m[33m;[39m
+ [90m 6 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m"next/link"[39m[33m;[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./nextjs-app/src/app/page.tsx [Client Component Browser]
+    ./nextjs-app/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./nextjs-app/src/app/page.tsx [Client Component SSR]
+    ./nextjs-app/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./nextjs-app/src/components/CompanyCard.tsx:4:1
+Module not found: Can't resolve 'framer-motion'
+[0m [90m 2 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m } [36mfrom[39m [32m"@/components/ui/card"[39m[33m;[39m
+ [90m 3 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m"@/components/ui/badge"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { motion } [36mfrom[39m [32m"framer-motion"[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { [33mLink[39m } [36mfrom[39m [32m"wouter"[39m[33m;[39m
+ [90m 6 |[39m [36mimport[39m { format[33m,[39m parseISO } [36mfrom[39m [32m"date-fns"[39m[33m;[39m
+ [90m 7 |[39m [36mimport[39m { cn } [36mfrom[39m [32m"@/lib/utils"[39m[33m;[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./nextjs-app/src/components/CompanyCard.tsx [Client Component Browser]
+    ./nextjs-app/src/app/page.tsx [Client Component Browser]
+    ./nextjs-app/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./nextjs-app/src/components/CompanyCard.tsx [Client Component SSR]
+    ./nextjs-app/src/app/page.tsx [Client Component SSR]
+    ./nextjs-app/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./nextjs-app/src/components/Providers.tsx:4:1
+Module not found: Can't resolve 'next-themes'
+[0m [90m 2 |[39m
+ [90m 3 |[39m [36mimport[39m { [33mQueryClient[39m[33m,[39m [33mQueryClientProvider[39m } [36mfrom[39m [32m"@tanstack/react-query"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mThemeProvider[39m } [36mfrom[39m [32m"next-themes"[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { useState } [36mfrom[39m [32m"react"[39m[33m;[39m
+ [90m 6 |[39m
+ [90m 7 |[39m [36mexport[39m [36mfunction[39m [33mProviders[39m({ children }[33m:[39m { children[33m:[39m [33mReact[39m[33m.[39m[33mReactNode[39m }) {[0m
+
+
+
+Import trace:
+  Server Component:
+    ./nextjs-app/src/components/Providers.tsx
+    ./nextjs-app/src/app/layout.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./nextjs-app/src/app/company/[name]/page.tsx:54:1
+Export useForm doesn't exist in target module
+[0m [90m 52 |[39m   [33mFormMessage[39m[33m,[39m
+ [90m 53 |[39m } [36mfrom[39m [32m"@/components/ui/form"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 54 |[39m [36mimport[39m { useForm } [36mfrom[39m [32m"react-hook-form"[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 55 |[39m [36mimport[39m { zodResolver } [36mfrom[39m [32m"@hookform/resolvers/zod"[39m[33m;[39m
+ [90m 56 |[39m [36mimport[39m { updateTaskStatusSchema[33m,[39m type [33mTask[39m } [36mfrom[39m [32m"@/shared/schema"[39m[33m;[39m
+ [90m 57 |[39m [36mimport[39m {[0m
+
+The export useForm was not found in module [project]/nextjs-app/node_modules/react-hook-form/dist/react-server.esm.mjs [app-rsc] (ecmascript).
+Did you mean to import set?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+    at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34) [C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\.next\build\chunks\[root-of-the-server]__8f0d712c._.js:146:36])
+    at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23) [C:\Users\Lenovo\Downloads\Work-Tracker-Secret\Work-Tracker-Secret\nextjs-app\.next\build\chunks\[root-of-the-server]__1cbb0b36._.js:443:31])
+    at <unknown> (./nextjs-app/src/app/company/[name]/page.tsx:31:10)
+    at <unknown> (./nextjs-app/src/app/company/[name]/page.tsx:1:19)
+    at <unknown> (./nextjs-app/src/components/ui/dialog.tsx:4:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./nextjs-app/src/components/ui/select.tsx:4:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./nextjs-app/src/app/company/[name]/page.tsx:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./nextjs-app/src/app/page.tsx:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./nextjs-app/src/components/CompanyCard.tsx:4:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./nextjs-app/src/components/Providers.tsx:4:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./nextjs-app/src/app/company/[name]/page.tsx:54:1)

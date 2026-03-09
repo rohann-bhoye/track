@@ -1,0 +1,63 @@
+import { type Task, type InsertTask } from "@/shared/schema";
+import { collection, getDocs, addDoc, updateDoc, doc, Timestamp, query, orderBy } from "firebase/firestore";
+import { db } from "./firebase";
+
+
+export interface IStorage {
+  getTasks(): Promise<Task[]>;
+  createTask(task: InsertTask): Promise<Task>;
+  createTasks(tasks: InsertTask[]): Promise<Task[]>;
+  updateTask(id: any, updates: Partial<Task>): Promise<Task>;
+}
+
+export class FirebaseStorage implements IStorage {
+  private collectionRef = collection(db, "tasks");
+
+  async getTasks(): Promise<Task[]> {
+    const q = query(this.collectionRef, orderBy("createdAt", "desc"));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        id: doc.id as any,
+        createdAt: data.createdAt?.toDate() || null,
+        completedAt: data.completedAt?.toDate() || null,
+      } as Task;
+    });
+  }
+
+  async createTask(insertTask: InsertTask): Promise<Task> {
+    const taskData = {
+      ...insertTask,
+      createdAt: Timestamp.now(),
+      completedAt: null,
+    };
+    const docRef = await addDoc(this.collectionRef, taskData);
+    return { ...taskData, id: docRef.id as any, createdAt: taskData.createdAt.toDate() } as Task;
+  }
+
+  async createTasks(insertTasks: InsertTask[]): Promise<Task[]> {
+    const results: Task[] = [];
+    for (const task of insertTasks) {
+      results.push(await this.createTask(task));
+    }
+    return results;
+  }
+
+  async updateTask(id: any, updates: Partial<Task>): Promise<Task> {
+    const docRef = doc(db, "tasks", String(id));
+    const firestoreUpdates: any = { ...updates };
+    
+    if (updates.status === "completed") {
+      firestoreUpdates.completedAt = Timestamp.now();
+    } else if (updates.status === "in_progress") {
+      firestoreUpdates.completedAt = null;
+    }
+    
+    await updateDoc(docRef, firestoreUpdates);
+    return { id, ...updates } as any;
+  }
+}
+
+export const storage = new FirebaseStorage();
