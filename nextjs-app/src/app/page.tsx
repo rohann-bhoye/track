@@ -98,10 +98,6 @@ export default function Home() {
           className="flex flex-col md:flex-row md:items-end justify-between gap-6"
         >
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary font-medium text-sm mb-6 border border-primary/20">
-              <ClipboardList className="w-4 h-4" />
-              <span>Bucketstudy Founder</span>
-            </div>
             <h1 className="text-4xl md:text-5xl lg:text-7xl font-display font-bold text-foreground text-balance leading-tight tracking-tight">
               Rohan Bhoye <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">Task</span> Dashboard
             </h1>
@@ -109,6 +105,14 @@ export default function Home() {
               Organize your professional contributions across multiple companies. 
               Secure, localized, and beautifully visualized.
             </p>
+            <div className="mt-6 space-y-1">
+              <p className="text-primary font-bold tracking-wide uppercase text-sm">
+                Caves Studio - Digital marketing Assistance
+              </p>
+              <p className="text-foreground/80 font-bold text-lg">
+                BucketStudy X BucketStudy Studio Founder
+              </p>
+            </div>
           </div>
           
           <div className="flex-shrink-0 pt-4 md:pt-0">
