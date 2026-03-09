@@ -98,3 +98,4 @@
  GET /api/tasks 200 in 102ms (compile: 11ms, render: 91ms)
  GET /report 200 in 114ms (compile: 19ms, render: 95ms)
  GET /api/tasks 200 in 137ms (compile: 28ms, render: 109ms)
+^C^C
