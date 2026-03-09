@@ -1,24 +1,28 @@
-import { pgTable, text, serial, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const tasks = pgTable("tasks", {
-  id: text("id").primaryKey(),
-  companyName: text("company_name").notNull(),
-  dateOfJoin: text("date_of_join").notNull(),
-  taskDate: text("task_date").notNull(),
-  description: text("description").notNull(),
-  status: text("status").default("in_progress"), // "in_progress" | "completed"
-  startDate: text("start_date"),
-  endDate: text("end_date"),
-  createdAt: timestamp("created_at").defaultNow(),
-  completedAt: timestamp("completed_at"),
+// Pure Zod schema — no drizzle-orm dependency (app uses Firebase, not Postgres)
+export const insertTaskSchema = z.object({
+  companyName: z.string().min(1),
+  dateOfJoin: z.string().min(1),
+  taskDate: z.string().min(1),
+  description: z.string().min(1),
+  status: z.string().default("in_progress"),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
 });
 
-export const insertTaskSchema = createInsertSchema(tasks).omit({ 
-  id: true, 
-  createdAt: true, 
-  completedAt: true 
+// Full Task shape as stored in / returned from Firebase
+export const taskSchema = z.object({
+  id: z.string(),
+  companyName: z.string(),
+  dateOfJoin: z.string(),
+  taskDate: z.string(),
+  description: z.string(),
+  status: z.string().nullable(),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
+  createdAt: z.coerce.date().nullable(),
+  completedAt: z.coerce.date().nullable(),
 });
 
 export const createTasksBulkRequestSchema = z.object({
@@ -49,7 +53,7 @@ export const updateTaskStatusSchema = z.object({
   secretCode: z.string().min(1, "Secret code is required"),
 });
 
-export type Task = typeof tasks.$inferSelect;
+export type Task = z.infer<typeof taskSchema>;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type UpdateTaskStatusRequest = z.infer<typeof updateTaskStatusSchema>;
 export type TaskResponse = Task;

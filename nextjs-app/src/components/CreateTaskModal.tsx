@@ -32,7 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateTask, useTasks, useVerifyCode } from "@/hooks/use-tasks";
-import { insertTaskSchema, tasks, type Task, createTasksBulkRequestSchema, type CreateTasksBulkRequest } from "@/shared/schema";
+import { insertTaskSchema, type Task, createTasksBulkRequestSchema, type CreateTasksBulkRequest } from "@/shared/schema";
 import { cn } from "@/lib/utils";
 
 export function CreateTaskModal() {

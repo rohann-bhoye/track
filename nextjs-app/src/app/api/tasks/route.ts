@@ -30,8 +30,8 @@ export async function POST(req: Request) {
       taskDate: data.taskDate,
       description: t.description,
       status: t.status,
-      startDate: t.startDate,
-      endDate: t.endDate
+      startDate: t.startDate ?? null,
+      endDate: t.endDate ?? null
     }));
 
     const createdTasks = await storage.createTasks(insertTasks);
@@ -43,6 +43,7 @@ export async function POST(req: Request) {
         field: (err as any).errors[0]?.path.join('.'),
       }, { status: 400 });
     }
+    console.error("[POST /api/tasks] Unhandled error:", err);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }
