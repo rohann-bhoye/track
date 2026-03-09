@@ -9,6 +9,7 @@ export const insertTaskSchema = z.object({
   status: z.string().default("in_progress"),
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
+  proofLink: z.string().nullable().optional(),
 });
 
 // Full Task shape as stored in / returned from Firebase
@@ -21,6 +22,7 @@ export const taskSchema = z.object({
   status: z.string().nullable(),
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
+  proofLink: z.string().nullable().optional(),
   createdAt: z.coerce.date().nullable(),
   completedAt: z.coerce.date().nullable(),
 });
@@ -34,6 +36,7 @@ export const createTasksBulkRequestSchema = z.object({
     status: z.enum(["in_progress", "completed"]).default("in_progress"),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
+    proofLink: z.string().optional(),
   })).min(1, "At least one task is required"),
   secretCode: z.string().min(1, "Secret code is required"),
 });
@@ -50,6 +53,11 @@ export const updateTaskStatusSchema = z.object({
   endDate: z.string().optional(),
   taskDate: z.string().optional(),
   description: z.string().optional(),
+  proofLink: z.string().optional(),
+  secretCode: z.string().min(1, "Secret code is required"),
+});
+
+export const deleteTaskRequestSchema = z.object({
   secretCode: z.string().min(1, "Secret code is required"),
 });
 

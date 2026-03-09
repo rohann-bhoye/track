@@ -31,7 +31,8 @@ export async function POST(req: Request) {
       description: t.description,
       status: t.status,
       startDate: t.startDate ?? null,
-      endDate: t.endDate ?? null
+      endDate: t.endDate ?? null,
+      proofLink: t.proofLink ?? null
     }));
 
     const createdTasks = await storage.createTasks(insertTasks);

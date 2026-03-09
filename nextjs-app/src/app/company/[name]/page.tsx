@@ -4,10 +4,15 @@ import { useMemo, useState } from "react";
 import { format, parseISO, isValid } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 
-const safeFormatDate = (dateString: string | undefined | null, formatStr: string) => {
-  if (!dateString) return "N/A";
-  const parsed = parseISO(dateString);
-  return isValid(parsed) ? format(parsed, formatStr) : "Invalid Date";
+const safeFormatDate = (dateOrString: any, formatStr: string) => {
+  if (!dateOrString) return "N/A";
+  let date: Date;
+  if (typeof dateOrString === "string") {
+    date = parseISO(dateOrString);
+  } else {
+    date = dateOrString;
+  }
+  return isValid(date) ? format(date, formatStr) : "Invalid Date";
 };
 import {
   ArrowLeft,
@@ -24,10 +29,13 @@ import {
   Pencil,
   Lock,
   Loader2,
-  CalendarDays
+  CalendarDays,
+  ExternalLink,
+  Trash2,
+  Trash
 } from "lucide-react";
 
-import { useTasks, useUpdateTask, useVerifyCode } from "@/hooks/use-tasks";
+import { useTasks, useUpdateTask, useVerifyCode, useDeleteTask } from "@/hooks/use-tasks";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -74,6 +82,7 @@ export default function CompanyDetail() {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [authCode, setAuthCode] = useState("");
   const verifyCode = useVerifyCode();
+  const deleteTask = useDeleteTask();
 
   const companyTasks = useMemo(() => {
     if (!allTasks) return [];
@@ -102,6 +111,7 @@ export default function CompanyDetail() {
       endDate: "",
       taskDate: "",
       description: "",
+      proofLink: "",
       secretCode: "",
     },
   });
@@ -114,6 +124,7 @@ export default function CompanyDetail() {
       endDate: task.endDate || "",
       taskDate: task.taskDate || "",
       description: task.description || "",
+      proofLink: (task as any).proofLink || "",
       secretCode: "",
     });
     setIsAuthorized(false);
@@ -131,6 +142,7 @@ export default function CompanyDetail() {
         endDate: values.endDate,
         taskDate: values.taskDate,
         description: values.description,
+        proofLink: values.proofLink,
       },
       secretCode: values.secretCode,
     }, {
@@ -140,6 +152,23 @@ export default function CompanyDetail() {
       },
       onError: (err: any) => {
         toast({ title: "Update Failed", description: err.message, variant: "destructive" });
+      }
+    });
+  };
+
+  const handleDeleteTask = (task: Task) => {
+    if (!confirm("Are you sure you want to delete this task? This action cannot be undone.")) return;
+    
+    // We need the secret code for deletion too
+    const code = prompt("Enter secure code to delete:");
+    if (!code) return;
+
+    deleteTask.mutate({ id: task.id, secretCode: code }, {
+      onSuccess: () => {
+        toast({ title: "Task Deleted", description: "The task has been removed." });
+      },
+      onError: (err: any) => {
+        toast({ title: "Delete Failed", description: err.message, variant: "destructive" });
       }
     });
   };
@@ -239,37 +268,60 @@ export default function CompanyDetail() {
                               {task.status === "completed" ? "Completed" : "In Progress"}
                             </Badge>
 
-                            {task.startDate && (
-                              <Badge variant="outline" className="rounded-lg bg-background/50 border-border px-2.5 py-1 text-muted-foreground flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5" />
-                                Start: {safeFormatDate(task.startDate, "MMM d")}
-                              </Badge>
-                            )}
+                             {task.createdAt && (
+                               <Badge variant="outline" className="rounded-lg bg-background/50 border-border px-2.5 py-1 text-muted-foreground flex items-center gap-1.5">
+                                 <Clock className="w-3.5 h-3.5" />
+                                 Logged: {safeFormatDate(task.createdAt, "MMM d, h:mm a")}
+                               </Badge>
+                             )}
 
-                            {task.endDate && (
-                              <Badge variant="outline" className="rounded-lg bg-background/50 border-border px-2.5 py-1 text-muted-foreground flex items-center gap-1.5">
-                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                End: {safeFormatDate(task.endDate, "MMM d")}
-                              </Badge>
-                            )}
+                             {task.completedAt && (
+                               <Badge variant="outline" className="rounded-lg bg-background/50 border-border px-2.5 py-1 text-muted-foreground flex items-center gap-1.5">
+                                 <CheckCircle2 className="w-3.5 h-3.5" />
+                                 Completed: {safeFormatDate(task.completedAt, "MMM d, h:mm a")}
+                               </Badge>
+                             )}
                           </div>
 
                           <div className="flex gap-3">
-                            <FileText className="w-4 h-4 text-muted-foreground mt-1 shrink-0" />
                             <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
                               {task.description}
                             </p>
                           </div>
+
+                          {(task as any).proofLink && (
+                            <div className="flex gap-3 pt-2">
+                              <ExternalLink className="w-4 h-4 text-primary mt-1 shrink-0" />
+                              <a 
+                                href={(task as any).proofLink} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-primary text-sm font-medium hover:underline flex items-center gap-1.5"
+                              >
+                                View Proof of Work
+                              </a>
+                            </div>
+                          )}
                         </div>
 
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleEditClick(task)}
-                          className="shrink-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/5 text-muted-foreground hover:text-primary"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
+                        <div className="flex gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleEditClick(task)}
+                            className="rounded-xl hover:bg-primary/5 text-muted-foreground hover:text-primary"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleDeleteTask(task)}
+                            className="rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -356,12 +408,14 @@ export default function CompanyDetail() {
                       <div className="flex justify-between items-center text-xs">
                         <span className="text-muted-foreground font-semibold flex items-center gap-1.5">
                           <CalendarDays className="w-3.5 h-3.5" />
-                          Log Date: {editingTask?.taskDate}
+                          Log Date: {safeFormatDate(editingTask?.createdAt, "MMM d, h:mm a")}
                         </span>
-                        <span className="text-muted-foreground font-semibold flex items-center gap-1.5">
-                          <Clock className="w-3.5 h-3.5" />
-                          Start: {editingTask?.startDate}
-                        </span>
+                        {editingTask?.completedAt && (
+                          <span className="text-muted-foreground font-semibold flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5" />
+                            Finished: {safeFormatDate(editingTask?.completedAt, "MMM d, h:mm a")}
+                          </span>
+                        )}
                       </div>
                       <div className="pt-2 border-t border-border/40">
                         <p className="text-sm font-medium text-foreground line-clamp-2 italic opacity-70">
@@ -418,6 +472,27 @@ export default function CompanyDetail() {
                                   className="rounded-2xl h-12 border-primary/20 pl-11 focus:ring-primary/20 bg-muted/50 cursor-not-allowed opacity-70" 
                                 />
                                 <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary opacity-50" />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={editForm.control}
+                        name="proofLink"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-foreground/80 font-bold">Proof Link (Optional)</FormLabel>
+                            <FormControl>
+                              <div className="relative group">
+                                <Input 
+                                  placeholder="https://..." 
+                                  {...field} 
+                                  className="rounded-2xl h-12 border-primary/20 pl-11 focus:ring-primary/20" 
+                                />
+                                <ExternalLink className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary opacity-50" />
                               </div>
                             </FormControl>
                             <FormMessage />

@@ -11,6 +11,7 @@ const taskSchema = z.object({
   status: z.string().nullable(),
   startDate: z.string().nullable(),
   endDate: z.string().nullable(),
+  proofLink: z.string().nullable().optional(),
   createdAt: z.coerce.date().nullable(),
   completedAt: z.coerce.date().nullable(),
 });
@@ -69,6 +70,16 @@ export const api = {
       input: updateTaskStatusSchema,
       responses: {
         200: taskSchema,
+        400: errorSchemas.validation,
+        401: errorSchemas.unauthorized,
+        404: errorSchemas.notFound,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/tasks/:id' as const,
+      responses: {
+        200: z.object({ success: z.boolean() }),
         400: errorSchemas.validation,
         401: errorSchemas.unauthorized,
         404: errorSchemas.notFound,

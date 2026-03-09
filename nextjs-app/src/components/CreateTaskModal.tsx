@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { Lock, Briefcase, Calendar, FileText, Loader2, Plus, Trash2, CheckCircle2, Clock, ListTodo } from "lucide-react";
+import { Lock, Briefcase, Calendar, FileText, Loader2, Plus, Trash2, CheckCircle2, Clock, ListTodo, Link as LinkIcon } from "lucide-react";
 
 import {
   Dialog,
@@ -54,6 +54,7 @@ export function CreateTaskModal() {
         { 
           description: "", 
           status: "in_progress", 
+          proofLink: "",
         }
       ],
       secretCode: "",
@@ -129,7 +130,7 @@ export function CreateTaskModal() {
           ...form.getValues(),
           companyName: "",
           dateOfJoin: "",
-          tasks: [{ description: "", status: "in_progress" }],
+          tasks: [{ description: "", status: "in_progress", proofLink: "" }],
           secretCode: "",
         });
       },
@@ -301,7 +302,7 @@ export function CreateTaskModal() {
                           )}
 
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
-                            <div className="md:col-span-3">
+                            <div className="md:col-span-2">
                               <FormField
                                 control={form.control}
                                 name={`tasks.${index}.description`}
@@ -314,6 +315,28 @@ export function CreateTaskModal() {
                                         className="min-h-[80px] rounded-lg border-muted-foreground/20 focus-visible:ring-primary/50 resize-none text-sm" 
                                         {...field} 
                                       />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            <div>
+                              <FormField
+                                control={form.control}
+                                name={`tasks.${index}.proofLink`}
+                                render={({ field }) => (
+                                  <FormItem className="space-y-1">
+                                    <FormLabel className="text-xs font-medium text-muted-foreground">Proof Link (Optional)</FormLabel>
+                                    <FormControl>
+                                      <div className="relative">
+                                        <Input 
+                                          placeholder="https://..." 
+                                          className="h-9 rounded-lg border-muted-foreground/20 pl-8 text-xs" 
+                                          {...field} 
+                                        />
+                                        <LinkIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                      </div>
                                     </FormControl>
                                     <FormMessage />
                                   </FormItem>

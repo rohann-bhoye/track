@@ -102,3 +102,30 @@ export function useVerifyCode() {
     },
   });
 }
+
+export function useDeleteTask() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, secretCode }: { id: string, secretCode: string }) => {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secretCode }),
+      });
+      
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error("Invalid secret code.");
+        }
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Delete failed.");
+      }
+      
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.tasks.list.path] });
+    },
+  });
+}

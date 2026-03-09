@@ -8,6 +8,7 @@ export interface IStorage {
   createTask(task: InsertTask): Promise<Task>;
   createTasks(tasks: InsertTask[]): Promise<Task[]>;
   updateTask(id: any, updates: Partial<Task>): Promise<Task>;
+  deleteTask(id: any): Promise<void>;
 }
 
 export class FirebaseStorage implements IStorage {
@@ -34,7 +35,8 @@ export class FirebaseStorage implements IStorage {
       completedAt: null,
     };
     const docRef = await addDoc(this.collectionRef, taskData);
-    return { ...taskData, id: docRef.id as any, createdAt: taskData.createdAt.toDate() } as Task;
+    const createdData = { ...taskData, id: docRef.id as any, createdAt: taskData.createdAt.toDate() };
+    return createdData as Task;
   }
 
   async createTasks(insertTasks: InsertTask[]): Promise<Task[]> {
@@ -57,6 +59,12 @@ export class FirebaseStorage implements IStorage {
     
     await updateDoc(docRef, firestoreUpdates);
     return { id, ...updates } as any;
+  }
+
+  async deleteTask(id: any): Promise<void> {
+    const { deleteDoc } = await import("firebase/firestore");
+    const docRef = doc(db, "tasks", String(id));
+    await deleteDoc(docRef);
   }
 }
 
