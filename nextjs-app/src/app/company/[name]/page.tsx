@@ -181,9 +181,9 @@ export default function CompanyDetail() {
       
       <header className="pt-12 pb-8 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
         <Link href="/">
-          <Button variant="ghost" size="sm" className="mb-6 group">
-            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-            Back to Dashboard
+          <Button variant="ghost" size="sm" className="mb-4 md:mb-6 group px-2 md:px-3">
+            <ArrowLeft className="w-4 h-4 mr-1 md:mr-2 group-hover:-translate-x-1 transition-transform" />
+            <span className="text-sm md:text-base">Back to Dashboard</span>
           </Button>
         </Link>
 
@@ -194,16 +194,16 @@ export default function CompanyDetail() {
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -z-10" />
           
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-primary/10 text-primary rounded-2xl">
-                <Building2 className="w-8 h-8" />
+          <div className="space-y-4 w-full">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="p-2.5 md:p-3 bg-primary/10 text-primary rounded-2xl w-fit">
+                <Building2 className="w-6 h-6 md:w-8 md:h-8" />
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground">
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-display font-bold text-foreground break-words">
                   {name}
                 </h1>
-                <div className="flex gap-4 mt-1 text-muted-foreground">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-muted-foreground">
                   <span className="flex items-center gap-1 text-sm font-medium">
                     <Calendar className="w-4 h-4" />
                     Joined {companyInfo?.dateOfJoin ? safeFormatDate(companyInfo.dateOfJoin, "MMM d, yyyy") : "N/A"}
@@ -213,8 +213,8 @@ export default function CompanyDetail() {
             </div>
           </div>
 
-          <div className="flex flex-col items-end gap-2">
-            <Badge variant="secondary" className="px-3 py-1 text-sm font-semibold rounded-full border-primary/10 bg-primary/5 text-primary">
+          <div className="flex flex-col items-start md:items-end gap-2 w-full md:w-auto mt-4 md:mt-0">
+            <Badge variant="secondary" className="px-3 py-1 text-sm font-semibold rounded-full border-primary/10 bg-primary/5 text-primary w-fit">
               <History className="w-4 h-4 mr-2" />
               {companyTasks.length} Total Tasks
             </Badge>
@@ -247,7 +247,7 @@ export default function CompanyDetail() {
                 <div className="flex-grow h-[1px] bg-gradient-to-r from-border/50 to-transparent ml-4" />
               </div>
 
-              <div className="grid gap-4 ml-14">
+              <div className="grid gap-4 ml-0 sm:ml-14">
                 {tasks.map((task) => (
                   <Card key={task.id} className="group border-border/40 hover:border-primary/30 transition-all duration-300 shadow-sm hover:shadow-md bg-card/50 backdrop-blur-sm relative overflow-hidden">
                     <CardContent className="p-6">
@@ -304,12 +304,12 @@ export default function CompanyDetail() {
                           )}
                         </div>
 
-                        <div className="flex gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-2 shrink-0 md:opacity-0 group-hover:opacity-100 transition-opacity mt-4 md:mt-0">
                           <Button 
                             variant="ghost" 
                             size="icon" 
                             onClick={() => handleEditClick(task)}
-                            className="rounded-xl hover:bg-primary/5 text-muted-foreground hover:text-primary"
+                            className="h-10 w-10 md:h-9 md:w-9 rounded-xl hover:bg-primary/5 text-muted-foreground hover:text-primary bg-muted/20 md:bg-transparent"
                           >
                             <Pencil className="w-4 h-4" />
                           </Button>
@@ -317,7 +317,7 @@ export default function CompanyDetail() {
                             variant="ghost" 
                             size="icon" 
                             onClick={() => handleDeleteTask(task)}
-                            className="rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                            className="h-10 w-10 md:h-9 md:w-9 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive bg-muted/20 md:bg-transparent"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>

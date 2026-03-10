@@ -90,18 +90,18 @@ export default function Home() {
       <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[120px] pointer-events-none -z-10" />
       
       {/* Header/Hero Area */}
-      <header className="pt-20 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+      <header className="pt-12 md:pt-20 pb-8 md:pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col md:flex-row md:items-end justify-between gap-6"
+          className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 md:gap-6"
         >
           <div className="max-w-2xl">
-            <h1 className="text-4xl md:text-5xl lg:text-7xl font-display font-bold text-foreground text-balance leading-tight tracking-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-display font-bold text-foreground text-balance leading-tight tracking-tight">
               Rohan Bhoye <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">Task</span> Dashboard
             </h1>
-            <p className="mt-6 text-xl text-muted-foreground/80 text-balance leading-relaxed">
+            <p className="mt-4 md:mt-6 text-lg md:text-xl text-muted-foreground/80 text-balance leading-relaxed">
               Organize your professional contributions across multiple companies. 
               Secure, localized, and beautifully visualized.
             </p>
@@ -115,7 +115,7 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="flex-shrink-0 pt-4 md:pt-0">
+          <div className="flex-shrink-0">
             <CreateTaskModal />
           </div>
         </motion.div>
@@ -125,10 +125,10 @@ export default function Home() {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-24">
         
         {/* Toolbar */}
-        <div className="flex items-center justify-between py-8 border-b border-border/50 mb-12">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between py-6 md:py-8 border-b border-border/50 mb-8 md:mb-12 gap-4">
           <div className="flex items-center gap-3">
-            <Building2 className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-display font-bold text-foreground">Active Companies</h2>
+            <Building2 className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+            <h2 className="text-xl md:text-2xl font-display font-bold text-foreground">Active Companies</h2>
             <Badge variant="outline" className="ml-2 font-mono font-bold bg-muted/30">
               {companyEntries.length}
             </Badge>
@@ -136,9 +136,9 @@ export default function Home() {
           
           <div className="flex items-center gap-3">
             {hasTasks && (
-              <Link href="/report">
-                <Button variant="outline" size="lg" className="h-11 rounded-xl font-bold">
-                  <BarChart3 className="w-5 h-5 mr-2" />
+              <Link href="/report" className="w-full sm:w-auto">
+                <Button variant="outline" size="lg" className="h-10 md:h-11 rounded-xl font-bold w-full sm:w-auto px-4 md:px-6">
+                  <BarChart3 className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                   Detailed Report
                 </Button>
               </Link>
