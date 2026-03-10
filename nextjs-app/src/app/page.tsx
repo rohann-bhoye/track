@@ -98,7 +98,7 @@ export default function Home() {
           className="flex flex-col md:flex-row md:items-end justify-between gap-6"
         >
           <div className="max-w-2xl">
-            <h1 className="text-4xl md:text-5xl lg:text-7xl font-display font-bold text-foreground text-balance leading-tight tracking-tight">
+            <h1 className="text-3xl md:text-5xl lg:text-7xl font-display font-bold text-foreground text-balance leading-tight tracking-tight">
               Rohan Bhoye <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">Task</span> Dashboard
             </h1>
             <p className="mt-6 text-xl text-muted-foreground/80 text-balance leading-relaxed">
@@ -125,7 +125,7 @@ export default function Home() {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-24">
         
         {/* Toolbar */}
-        <div className="flex items-center justify-between py-8 border-b border-border/50 mb-12">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-8 border-b border-border/50 mb-12 gap-6">
           <div className="flex items-center gap-3">
             <Building2 className="w-6 h-6 text-primary" />
             <h2 className="text-2xl font-display font-bold text-foreground">Active Companies</h2>
@@ -134,10 +134,10 @@ export default function Home() {
             </Badge>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             {hasTasks && (
-              <Link href="/report">
-                <Button variant="outline" size="lg" className="h-11 rounded-xl font-bold">
+              <Link href="/report" className="w-full sm:w-auto">
+                <Button variant="outline" size="lg" className="h-11 rounded-xl font-bold w-full sm:w-auto">
                   <BarChart3 className="w-5 h-5 mr-2" />
                   Detailed Report
                 </Button>

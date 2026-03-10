@@ -190,7 +190,7 @@ export default function CompanyDetail() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card border border-border/50 rounded-3xl p-8 shadow-xl shadow-primary/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden"
+          className="bg-card border border-border/50 rounded-3xl p-6 md:p-8 shadow-xl shadow-primary/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -z-10" />
           
@@ -247,11 +247,11 @@ export default function CompanyDetail() {
                 <div className="flex-grow h-[1px] bg-gradient-to-r from-border/50 to-transparent ml-4" />
               </div>
 
-              <div className="grid gap-4 ml-14">
+              <div className="grid gap-4 ml-0 sm:ml-14">
                 {tasks.map((task) => (
                   <Card key={task.id} className="group border-border/40 hover:border-primary/30 transition-all duration-300 shadow-sm hover:shadow-md bg-card/50 backdrop-blur-sm relative overflow-hidden">
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start gap-6">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-6">
                         <div className="space-y-4 flex-grow">
                           <div className="flex flex-wrap gap-3">
                             <Badge className={cn(
@@ -304,7 +304,7 @@ export default function CompanyDetail() {
                           )}
                         </div>
 
-                        <div className="flex gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-2 shrink-0 sm:opacity-0 group-hover:opacity-100 transition-opacity self-end sm:self-start">
                           <Button 
                             variant="ghost" 
                             size="icon" 

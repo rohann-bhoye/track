@@ -37,10 +37,10 @@ export function CompanyCard({ name, tasks, index }: CompanyCardProps) {
           {/* Decorative element */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -z-0 group-hover:bg-primary/10 transition-colors" />
           
-          <CardContent className="p-8 relative z-10 flex flex-col h-full">
+          <CardContent className="p-6 sm:p-8 relative z-10 flex flex-col h-full">
             <div className="flex justify-between items-start mb-6">
-              <div className="p-4 bg-primary/10 text-primary rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                <Building2 className="w-8 h-8" />
+              <div className="p-3 sm:p-4 bg-primary/10 text-primary rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <Building2 className="w-6 h-6 sm:w-8 sm:h-8" />
               </div>
               <div className="text-right">
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Status</p>
