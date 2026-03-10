@@ -1,0 +1,13 @@
+﻿src/app/company/[name]/page.tsx(41,71): error TS2307: Cannot find module '@/hooks/use-tasks' or its corresponding type declarations.
+src/app/company/[name]/page.tsx(42,24): error TS2307: Cannot find module '@/components/ui/button' or its corresponding type declarations.
+src/app/company/[name]/page.tsx(45,26): error TS2307: Cannot find module '@/components/ui/skeleton' or its corresponding type declarations.
+src/app/company/[name]/page.tsx(46,23): error TS2307: Cannot find module '@/components/ui/badge' or its corresponding type declarations.
+src/app/company/[name]/page.tsx(47,35): error TS2307: Cannot find module '@/components/ui/card' or its corresponding type declarations.
+src/app/company/[name]/page.tsx(48,20): error TS2307: Cannot find module '@/lib/utils' or its corresponding type declarations.
+src/app/company/[name]/page.tsx(49,26): error TS2307: Cannot find module '@/hooks/use-toast' or its corresponding type declarations.
+src/app/company/[name]/page.tsx(56,8): error TS2307: Cannot find module '@/components/ui/dialog' or its corresponding type declarations.
+src/app/company/[name]/page.tsx(57,23): error TS2307: Cannot find module '@/components/ui/input' or its corresponding type declarations.
+src/app/company/[name]/page.tsx(58,26): error TS2307: Cannot find module '@/components/ui/textarea' or its corresponding type declarations.
+src/app/company/[name]/page.tsx(66,8): error TS2307: Cannot find module '@/components/ui/form' or its corresponding type declarations.
+src/app/company/[name]/page.tsx(69,51): error TS2307: Cannot find module '@/shared/schema' or its corresponding type declarations.
+src/app/company/[name]/page.tsx(76,8): error TS2307: Cannot find module '@/components/ui/select' or its corresponding type declarations.

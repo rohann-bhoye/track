@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { Lock, Briefcase, Calendar, FileText, Loader2, Plus, Trash2, CheckCircle2, Clock, ListTodo, Link as LinkIcon } from "lucide-react";
+import { format, isSunday, parseISO } from "date-fns";
+import { Lock, Briefcase, Calendar, FileText, Loader2, Plus, Trash2, CheckCircle2, Clock, ListTodo, Link as LinkIcon, Palmtree, CalendarX } from "lucide-react";
 
 import {
   Dialog,
@@ -84,6 +84,26 @@ export function CreateTaskModal() {
       }
     }
   }, [companyName, tasks, form, toast]);
+
+  // Sunday detection logic
+  const taskDate = form.watch("taskDate");
+  useEffect(() => {
+    if (!taskDate) return;
+    
+    try {
+      const date = parseISO(taskDate);
+      if (isSunday(date)) {
+        const currentTasks = form.getValues("tasks");
+        const updatedTasks = currentTasks.map(task => ({
+          ...task,
+          status: task.status === "in_progress" ? "holiday" : task.status
+        }));
+        form.setValue("tasks", updatedTasks);
+      }
+    } catch (e) {
+      console.error("Error parsing task date", e);
+    }
+  }, [taskDate, form]);
 
   const verifyCode = useVerifyCode();
 
@@ -284,6 +304,27 @@ export function CreateTaskModal() {
                         <Plus className="w-4 h-4 mr-1" />
                         Add Another
                       </Button>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          // Clear existing and add a leave task
+                          form.setValue("tasks", [{ 
+                            description: "On Leave / Personal Work", 
+                            status: "leave"
+                          } as any]);
+                          toast({
+                            title: "Marked as Leave",
+                            description: "Task description and status updated.",
+                            duration: 2000,
+                          });
+                        }}
+                        className="h-8 rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-transparent hover:border-rose-100"
+                      >
+                        <CalendarX className="w-4 h-4 mr-1" />
+                        Mark as Leave
+                      </Button>
                     </div>
 
                     <div className="space-y-4">
@@ -354,7 +395,10 @@ export function CreateTaskModal() {
                                       <FormControl>
                                         <SelectTrigger className={cn(
                                           "h-9 rounded-lg border-muted-foreground/20 text-xs font-medium",
-                                          field.value === "completed" ? "text-green-600 bg-green-50/50 border-green-200" : "text-amber-600 bg-amber-50/50 border-amber-200"
+                                          field.value === "completed" ? "text-green-600 bg-green-50/50 border-green-200" : 
+                                          field.value === "holiday" ? "text-purple-600 bg-purple-50/50 border-purple-200" :
+                                          field.value === "leave" ? "text-rose-600 bg-rose-50/50 border-rose-200" :
+                                          "text-amber-600 bg-amber-50/50 border-amber-200"
                                         )}>
                                           <SelectValue />
                                         </SelectTrigger>
@@ -370,6 +414,18 @@ export function CreateTaskModal() {
                                           <div className="flex items-center gap-2">
                                             <CheckCircle2 className="w-3.5 h-3.5" />
                                             Completed
+                                          </div>
+                                        </SelectItem>
+                                        <SelectItem value="holiday" className="text-purple-600 focus:bg-purple-50 focus:text-purple-700">
+                                          <div className="flex items-center gap-2">
+                                            <Palmtree className="w-3.5 h-3.5" />
+                                            Holiday
+                                          </div>
+                                        </SelectItem>
+                                        <SelectItem value="leave" className="text-rose-600 focus:bg-rose-50 focus:text-rose-700">
+                                          <div className="flex items-center gap-2">
+                                            <CalendarX className="w-3.5 h-3.5" />
+                                            Leave
                                           </div>
                                         </SelectItem>
                                       </SelectContent>

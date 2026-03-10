@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { format, parseISO, isValid } from "date-fns";
+import { format, parseISO, isValid, isSunday, eachDayOfInterval, startOfDay } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 
 const safeFormatDate = (dateOrString: any, formatStr: string) => {
@@ -32,7 +32,10 @@ import {
   CalendarDays,
   ExternalLink,
   Trash2,
-  Trash
+  Trash,
+  Palmtree,
+  CalendarX,
+  Sun
 } from "lucide-react";
 
 import { useTasks, useUpdateTask, useVerifyCode, useDeleteTask } from "@/hooks/use-tasks";
@@ -90,6 +93,8 @@ export default function CompanyDetail() {
       .sort((a: Task, b: Task) => new Date(b.taskDate).getTime() - new Date(a.taskDate).getTime());
   }, [allTasks, name]);
 
+  const companyInfo = useMemo(() => companyTasks[0], [companyTasks]);
+
   const groupedTasks = useMemo(() => {
     const groups: Record<string, Task[]> = {};
     companyTasks.forEach((task: Task) => {
@@ -100,8 +105,45 @@ export default function CompanyDetail() {
     });
     return Object.entries(groups).sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());
   }, [companyTasks]);
-
-  const companyInfo = companyTasks[0];
+  
+  const allDaysWithSundays = useMemo(() => {
+    if (!companyTasks) return groupedTasks;
+    
+    const start = companyInfo?.dateOfJoin ? parseISO(companyInfo.dateOfJoin) : 
+                 (companyTasks.length > 0 ? new Date(Math.min(...companyTasks.map(t => new Date(t.taskDate).getTime()))) : new Date());
+    const end = startOfDay(new Date());
+    
+    if (!isValid(start)) return groupedTasks;
+    
+    const allSundays = eachDayOfInterval({ start, end }).filter(date => isSunday(date));
+    const groups: Record<string, Task[]> = {};
+    
+    // Add existing tasks
+    companyTasks.forEach((task: Task) => {
+      const dateStr = task.taskDate;
+      if (!groups[dateStr]) groups[dateStr] = [];
+      groups[dateStr].push(task);
+    });
+    
+    // Inject Sundays if missing
+    allSundays.forEach(sunday => {
+      const dateStr = format(sunday, "yyyy-MM-dd");
+      if (!groups[dateStr]) {
+        groups[dateStr] = [{
+          id: `sunday-${dateStr}`,
+          companyName: name,
+          taskDate: dateStr,
+          description: "Weekly Holiday",
+          status: "holiday",
+          dateOfJoin: companyInfo?.dateOfJoin || "",
+          createdAt: sunday,
+          completedAt: sunday
+        } as Task];
+      }
+    });
+    
+    return Object.entries(groups).sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());
+  }, [companyTasks, groupedTasks, companyInfo, name]);
 
   const editForm = useForm({
     resolver: zodResolver(updateTaskStatusSchema),
@@ -224,7 +266,7 @@ export default function CompanyDetail() {
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-8">
         <div className="space-y-12">
-          {groupedTasks.map(([date, tasks], groupIdx) => (
+          {allDaysWithSundays.map(([date, tasks], groupIdx) => (
             <motion.section 
               key={date}
               initial={{ opacity: 0, x: -20 }}
@@ -241,7 +283,7 @@ export default function CompanyDetail() {
                     {safeFormatDate(date, "MMMM yyyy")}
                   </h2>
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                    {safeFormatDate(date, "EEEE")} • {tasks.length} {tasks.length === 1 ? 'Task' : 'Tasks'}
+                    {safeFormatDate(date, "EEEE")} {isSunday(parseISO(date)) && <span className="text-purple-500 font-bold ml-1">• Holiday</span>} • {tasks.length} {tasks.length === 1 ? 'Task' : 'Tasks'}
                   </p>
                 </div>
                 <div className="flex-grow h-[1px] bg-gradient-to-r from-border/50 to-transparent ml-4" />
@@ -258,14 +300,24 @@ export default function CompanyDetail() {
                               "font-semibold rounded-lg px-2.5 py-1",
                               task.status === "completed" 
                                 ? "bg-green-50 text-green-600 border-green-100 hover:bg-green-100" 
+                                : task.status === "holiday"
+                                ? "bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100"
+                                : task.status === "leave"
+                                ? "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
                                 : "bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100"
                             )}>
                               {task.status === "completed" ? (
                                 <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                              ) : task.status === "holiday" ? (
+                                <Palmtree className="w-3.5 h-3.5 mr-1.5" />
+                              ) : task.status === "leave" ? (
+                                <CalendarX className="w-3.5 h-3.5 mr-1.5" />
                               ) : (
                                 <Clock className="w-3.5 h-3.5 mr-1.5" />
                               )}
-                              {task.status === "completed" ? "Completed" : "In Progress"}
+                              {task.status === "completed" ? "Completed" : 
+                               task.status === "holiday" ? "Holiday" :
+                               task.status === "leave" ? "Leave" : "In Progress"}
                             </Badge>
 
                              {task.createdAt && (
@@ -450,6 +502,8 @@ export default function CompanyDetail() {
                               <SelectContent className="rounded-2xl">
                                 <SelectItem value="in_progress" className="text-amber-600 font-medium">In Progress</SelectItem>
                                 <SelectItem value="completed" className="text-green-600 font-medium">Completed</SelectItem>
+                                <SelectItem value="holiday" className="text-purple-600 font-medium">Holiday</SelectItem>
+                                <SelectItem value="leave" className="text-rose-600 font-medium">Leave</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />

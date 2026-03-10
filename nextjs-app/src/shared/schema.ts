@@ -33,7 +33,7 @@ export const createTasksBulkRequestSchema = z.object({
   taskDate: z.string().min(1, "Task Date is required"),
   tasks: z.array(z.object({
     description: z.string().min(10, "Please provide a more detailed description (min 10 chars)"),
-    status: z.enum(["in_progress", "completed"]).default("in_progress"),
+    status: z.enum(["in_progress", "completed", "holiday", "leave"]).default("in_progress"),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
     proofLink: z.string().optional(),
@@ -48,7 +48,7 @@ export const verifyCodeSchema = z.object({
 });
 
 export const updateTaskStatusSchema = z.object({
-  status: z.enum(["in_progress", "completed"]).optional(),
+  status: z.enum(["in_progress", "completed", "holiday", "leave"]).optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   taskDate: z.string().optional(),
