@@ -155,12 +155,12 @@ export function CreateTaskModal() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="lg" className="font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 rounded-xl px-4 md:px-6 w-full sm:w-auto h-11 md:h-12">
+        <Button size="lg" className="font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 rounded-xl px-6">
           <Plus className="w-5 h-5 mr-2" />
           Log Daily Work
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[700px] w-[95vw] sm:w-full p-0 overflow-hidden border-0 shadow-2xl rounded-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col transition-all duration-300">
+      <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden border-0 shadow-2xl rounded-2xl max-h-[90vh] flex flex-col transition-all duration-300">
         {!isAuthorized ? (
           <div className="p-8 flex flex-col items-center justify-center space-y-6">
             <div className="bg-primary/10 p-4 rounded-full">
@@ -195,13 +195,13 @@ export function CreateTaskModal() {
           </div>
         ) : (
           <>
-            <div className="bg-primary/10 px-4 md:px-6 py-4 md:py-6 border-b border-primary/10 flex-shrink-0">
+            <div className="bg-primary/10 px-6 py-6 border-b border-primary/10 flex-shrink-0">
               <DialogHeader>
-                <DialogTitle className="font-display text-xl md:text-2xl text-foreground flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+                <DialogTitle className="font-display text-2xl text-foreground flex items-center gap-2">
+                  <Briefcase className="w-6 h-6 text-primary" />
                   Add Daily Tasks
                 </DialogTitle>
-                <DialogDescription className="text-muted-foreground mt-1 md:mt-2 text-xs md:text-sm">
+                <DialogDescription className="text-muted-foreground mt-2">
                   Logged in as authorized user. Record your work progress below.
                 </DialogDescription>
               </DialogHeader>
@@ -211,17 +211,17 @@ export function CreateTaskModal() {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-muted/30 p-4 rounded-xl border border-border/50">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-muted/30 p-4 rounded-xl border border-border/50">
                     <FormField
                       control={form.control}
                       name="companyName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-foreground/80 font-medium text-xs md:text-sm">Company</FormLabel>
+                          <FormLabel className="text-foreground/80 font-medium">Company</FormLabel>
                           <FormControl>
                             <Input 
                               placeholder="Acme Corp" 
-                              className="h-9 md:h-10 rounded-lg border-muted-foreground/20 text-sm" 
+                              className="h-9 rounded-lg border-muted-foreground/20" 
                               list="company-list"
                               {...field} 
                             />
@@ -235,7 +235,6 @@ export function CreateTaskModal() {
                         </FormItem>
                       )}
                     />
-...
 
                     <FormField
                       control={form.control}
@@ -267,8 +266,8 @@ export function CreateTaskModal() {
                   </div>
 
                   <div className="space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
                         <ListTodo className="w-4 h-4 text-primary" />
                         Task List ({fields.length})
                       </h3>
@@ -280,7 +279,7 @@ export function CreateTaskModal() {
                           description: "", 
                           status: "in_progress"
                         })}
-                        className="h-8 md:h-9 rounded-lg text-primary border-primary/20 hover:bg-primary/5 w-full sm:w-auto"
+                        className="h-8 rounded-lg text-primary border-primary/20 hover:bg-primary/5"
                       >
                         <Plus className="w-4 h-4 mr-1" />
                         Add Another
@@ -313,7 +312,7 @@ export function CreateTaskModal() {
                                     <FormControl>
                                       <Textarea 
                                         placeholder="Briefly describe what you worked on..." 
-                                        className="min-h-[80px] md:min-h-[100px] rounded-lg border-muted-foreground/20 focus-visible:ring-primary/50 resize-none text-sm" 
+                                        className="min-h-[80px] rounded-lg border-muted-foreground/20 focus-visible:ring-primary/50 resize-none text-sm" 
                                         {...field} 
                                       />
                                     </FormControl>
@@ -322,7 +321,7 @@ export function CreateTaskModal() {
                                 )}
                               />
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:col-span-2">
+                            <div>
                               <FormField
                                 control={form.control}
                                 name={`tasks.${index}.proofLink`}
@@ -333,7 +332,7 @@ export function CreateTaskModal() {
                                       <div className="relative">
                                         <Input 
                                           placeholder="https://..." 
-                                          className="h-9 md:h-10 rounded-lg border-muted-foreground/20 pl-8 text-xs" 
+                                          className="h-9 rounded-lg border-muted-foreground/20 pl-8 text-xs" 
                                           {...field} 
                                         />
                                         <LinkIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -343,6 +342,8 @@ export function CreateTaskModal() {
                                   </FormItem>
                                 )}
                               />
+                            </div>
+                            <div>
                               <FormField
                                 control={form.control}
                                 name={`tasks.${index}.status`}
@@ -352,7 +353,7 @@ export function CreateTaskModal() {
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                       <FormControl>
                                         <SelectTrigger className={cn(
-                                          "h-9 md:h-10 rounded-lg border-muted-foreground/20 text-xs font-medium",
+                                          "h-9 rounded-lg border-muted-foreground/20 text-xs font-medium",
                                           field.value === "completed" ? "text-green-600 bg-green-50/50 border-green-200" : "text-amber-600 bg-amber-50/50 border-amber-200"
                                         )}>
                                           <SelectValue />
