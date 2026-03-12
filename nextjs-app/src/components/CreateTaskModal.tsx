@@ -121,8 +121,8 @@ export function CreateTaskModal() {
       },
       onError: (error: Error) => {
         toast({
-          title: "Access Denied",
-          description: error.message || "Invalid secure code.",
+          title: "Access Denied 🛑",
+          description: error.message || "Nope! That code is as fake as a three-dollar bill 💵",
           variant: "destructive",
         });
         form.setValue("secretCode", "");
@@ -156,8 +156,8 @@ export function CreateTaskModal() {
       },
       onError: (error: Error) => {
         toast({
-          title: "Submission Failed",
-          description: error.message,
+          title: "Submission Failed 💥",
+          description: error.message || "Houston, we have a problem logging your tasks. Try once more!",
           variant: "destructive",
         });
       },

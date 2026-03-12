@@ -268,7 +268,7 @@ export default function CompanyDetail() {
         setEditingTask(null);
       },
       onError: (err: any) => {
-        toast({ title: "Update Failed", description: err.message, variant: "destructive" });
+        toast({ title: "Update Failed 💥", description: err.message || "Oops! The database blinked. Try again!", variant: "destructive" });
       }
     });
   };
@@ -285,7 +285,7 @@ export default function CompanyDetail() {
         toast({ title: "Task Deleted", description: "The task has been removed." });
       },
       onError: (err: any) => {
-        toast({ title: "Delete Failed", description: err.message, variant: "destructive" });
+        toast({ title: "Delete Failed 💥", description: err.message || "Whoops, couldn't delete that. The ghost of the task remains!", variant: "destructive" });
       }
     });
   };
@@ -348,7 +348,7 @@ export default function CompanyDetail() {
           <Ghost className="h-16 w-16 text-muted-foreground/30 mx-auto" />
           <div className="space-y-2">
             <h2 className="text-2xl font-bold font-display">No tasks found</h2>
-            <p className="text-muted-foreground">This link doesn't seem to lead anywhere special. Double check with Rohan!</p>
+            <p className="text-muted-foreground">This link doesn't seem to lead anywhere special. Are you sure Rohan sent you this? 🕵️‍♀️</p>
           </div>
           <Link href="/" className="block pt-4">
             <Button variant="outline" className="rounded-xl px-10">Back to Home</Button>
@@ -617,7 +617,7 @@ export default function CompanyDetail() {
                           toast({ title: "Unlocked", description: "Form is now editable." });
                         },
                         onError: (error: Error) => {
-                          toast({ title: "Error", description: error.message || "Invalid code", variant: "destructive" });
+                          toast({ title: "Access Denied 🛑", description: error.message || "Invalid code! Are you guessing randomly?", variant: "destructive" });
                           setAuthCode("");
                         }
                       });
@@ -630,7 +630,7 @@ export default function CompanyDetail() {
                       setIsAuthorized(true);
                       toast({ title: "Unlocked", description: "Form is now editable." });
                     } else {
-                      toast({ title: "Error", description: "Invalid code", variant: "destructive" });
+                      toast({ title: "Access Denied 🛑", description: "Invalid code! Are you guessing randomly?", variant: "destructive" });
                       setAuthCode("");
                     }
                   }} 

@@ -56,7 +56,7 @@ export default function ReportPage() {
       localStorage.setItem("master_unlocked", "true");
       localStorage.setItem("master_unlock_time", Date.now().toString());
     } else {
-      toast({ title: "Access Denied", description: "Invalid master code.", variant: "destructive" });
+      toast({ title: "Access Denied 🛑", description: "Nice try, hacker! But that's not the master code.", variant: "destructive" });
       setMasterCode("");
     }
   };

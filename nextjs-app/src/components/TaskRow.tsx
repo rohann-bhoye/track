@@ -46,8 +46,8 @@ export function TaskRow({ task }: TaskRowProps) {
     onError: (error: any) => {
       const message = error?.response?.data?.message || "Failed to update task status";
       toast({
-        title: "Error",
-        description: message,
+        title: "Error 💥",
+        description: message || "Oops! The task slipped out of our hands. Try again!",
         variant: "destructive",
       });
     },

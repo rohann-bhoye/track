@@ -49,7 +49,7 @@ export default function Home() {
       localStorage.setItem("master_unlock_time", Date.now().toString());
       toast({ title: "Welcome back, Rohan", description: "Dashboard unlocked successfully." });
     } else {
-      toast({ title: "Access Denied", description: "Invalid master code.", variant: "destructive" });
+      toast({ title: "Access Denied 🛑", description: "Nice try, hacker! But that's not the master code.", variant: "destructive" });
       setMasterCode("");
     }
   };
@@ -165,9 +165,9 @@ export default function Home() {
           <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive mb-4">
             <SearchX className="h-8 w-8" />
           </div>
-          <h2 className="text-2xl font-bold font-display text-foreground">Could not load tasks</h2>
+          <h2 className="text-2xl font-bold font-display text-foreground">Uh oh! The server took a coffee break ☕</h2>
           <p className="text-muted-foreground max-w-sm mx-auto">
-            There was a problem connecting to the server. Please try refreshing the page.
+            We couldn't fetch your tasks. Please give it another tap or check your connection!
           </p>
           <Button onClick={() => window.location.reload()} variant="outline" className="mt-4">
             Refresh Page

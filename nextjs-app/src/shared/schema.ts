@@ -29,23 +29,23 @@ export const taskSchema = z.object({
 });
 
 export const createTasksBulkRequestSchema = z.object({
-  companyName: z.string().min(2, "Company Name must be at least 2 characters"),
-  dateOfJoin: z.string().min(1, "Date of Join is required"),
-  taskDate: z.string().min(1, "Task Date is required"),
+  companyName: z.string().min(2, "Company name is too short! Even 'Apple' has 5 letters 🍎"),
+  dateOfJoin: z.string().min(1, "When did you join? We're not mind readers! 🧠"),
+  taskDate: z.string().min(1, "When did you do this? Time travel isn't supported yet ⏳"),
   tasks: z.array(z.object({
-    description: z.string().min(10, "Please provide a more detailed description (min 10 chars)"),
+    description: z.string().min(10, "Come on, give us a bit more detail! (at least 10 chars) 📝"),
     status: z.enum(["in_progress", "completed", "holiday", "leave"]).default("in_progress"),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
     proofLink: z.string().optional(),
-  })).min(1, "At least one task is required"),
-  secretCode: z.string().min(1, "Secret code is required"),
+  })).min(1, "You didn't do any work? You must add at least one task! 🛌"),
+  secretCode: z.string().min(1, "Hold up! We need the secret passkey to let you in 🛑"),
 });
 
 export type CreateTasksBulkRequest = z.infer<typeof createTasksBulkRequestSchema>;
 
 export const verifyCodeSchema = z.object({
-  secretCode: z.string().min(1, "Secret code is required"),
+  secretCode: z.string().min(1, "Hold up! We need the secret passkey to let you in 🛑"),
 });
 
 export const updateTaskStatusSchema = z.object({
@@ -56,11 +56,11 @@ export const updateTaskStatusSchema = z.object({
   description: z.string().optional(),
   proofLink: z.string().optional(),
   originalDate: z.string().optional(),
-  secretCode: z.string().min(1, "Secret code is required"),
+  secretCode: z.string().min(1, "Hold up! We need the secret passkey to let you in 🛑"),
 });
 
 export const deleteTaskRequestSchema = z.object({
-  secretCode: z.string().min(1, "Secret code is required"),
+  secretCode: z.string().min(1, "Hold up! We need the secret passkey to let you in 🛑"),
 });
 
 export type Task = z.infer<typeof taskSchema>;
