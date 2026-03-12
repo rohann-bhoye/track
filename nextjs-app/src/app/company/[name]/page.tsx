@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { format, parseISO, isValid, isSunday, eachDayOfInterval, startOfDay } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -35,7 +35,10 @@ import {
   Trash,
   Palmtree,
   CalendarX,
-  Sun
+  Sun,
+  Share2,
+  Ghost,
+  ShieldAlert
 } from "lucide-react";
 
 import { useTasks, useUpdateTask, useVerifyCode, useDeleteTask } from "@/hooks/use-tasks";
@@ -78,7 +81,7 @@ import {
 export default function CompanyDetail() {
   const params = useParams();
   const name = params?.name ? decodeURIComponent(params.name as string) : "";
-  const { data: allTasks, isLoading } = useTasks();
+  const { data: allTasks, isLoading } = useTasks(name);
   const updateTask = useUpdateTask();
   const { toast } = useToast();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -87,10 +90,58 @@ export default function CompanyDetail() {
   const verifyCode = useVerifyCode();
   const deleteTask = useDeleteTask();
 
+  const [mounted, setMounted] = useState(false);
+  const [isMasterUnlocked, setIsMasterUnlocked] = useState(false);
+
+  // Helper to get company slug (mirrors server logic)
+  const getSlug = (str: string) => {
+    const secret = "rohan-secret-2024";
+    const combined = secret + str;
+    let hex = "";
+    for (let i = 0; i < combined.length; i++) {
+      hex += combined.charCodeAt(i).toString(16).padStart(2, "0");
+    }
+    return hex.substring(10, 22).toLowerCase();
+  };
+
+  useEffect(() => {
+    setMounted(true);
+    const saved = localStorage.getItem("master_unlocked");
+    const unlockTime = localStorage.getItem("master_unlock_time");
+    if (saved === "true" && unlockTime) {
+      const oneHour = 60 * 60 * 1000;
+      if (Date.now() - parseInt(unlockTime) < oneHour) {
+        setIsMasterUnlocked(true);
+      }
+    }
+  }, []);
+
+
+
+  const handleShare = () => {
+    if (typeof window !== "undefined") {
+      const slug = getSlug(name);
+      // If we are already on a slug-based URL, just copy it
+      // but to be safe, compute from the current company name
+      const activeName = companyTasks.length > 0 ? companyTasks[0].companyName : name;
+      const targetSlug = getSlug(activeName);
+      const url = `${window.location.origin}/company/${targetSlug}`;
+      navigator.clipboard.writeText(url);
+      toast({
+        title: "Secret Link Copied",
+        description: "A private link has been copied. Rohan's vault is secure!",
+      });
+    }
+  };
+
   const companyTasks = useMemo(() => {
     if (!allTasks) return [];
-    return allTasks.filter((t: Task) => t.companyName === name)
-      .sort((a: Task, b: Task) => new Date(b.taskDate).getTime() - new Date(a.taskDate).getTime());
+    const target = name.toLowerCase();
+    return allTasks.filter((t: Task) => {
+      const cName = t.companyName.toLowerCase();
+      const cSlug = getSlug(t.companyName).toLowerCase();
+      return cName === target || cSlug === target;
+    }).sort((a: Task, b: Task) => new Date(b.taskDate).getTime() - new Date(a.taskDate).getTime());
   }, [allTasks, name]);
 
   const companyInfo = useMemo(() => companyTasks[0], [companyTasks]);
@@ -154,6 +205,20 @@ export default function CompanyDetail() {
     
     return Object.entries(groups).sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());
   }, [companyTasks, groupedTasks, companyInfo, name]);
+
+  const activeCompanyName = useMemo(() => 
+    companyTasks.length > 0 ? companyTasks[0].companyName : null
+  , [companyTasks]);
+
+  const isUsingSlug = useMemo(() => 
+    activeCompanyName ? getSlug(activeCompanyName) === name.toLowerCase() : false
+  , [activeCompanyName, name]);
+
+  useEffect(() => {
+    if (activeCompanyName) {
+      document.title = `${activeCompanyName} | Work Tracker`;
+    }
+  }, [activeCompanyName]);
 
   const editForm = useForm({
     resolver: zodResolver(updateTaskStatusSchema),
@@ -225,7 +290,73 @@ export default function CompanyDetail() {
     });
   };
 
-  if (isLoading) return <DetailSkeleton />;
+  if (isLoading || !mounted) return <DetailSkeleton />;
+
+  
+  
+  // Joke message for unauthorized name access
+  if (!isMasterUnlocked && !isUsingSlug) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+        <div className="fixed top-0 left-0 w-full h-[300px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none -z-10" />
+        
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full text-center space-y-8 bg-card border border-border/50 p-12 rounded-[2.5rem] shadow-2xl relative"
+        >
+          <div className="relative inline-block">
+            <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center text-primary rotate-12">
+              <Ghost className="w-12 h-12" />
+            </div>
+            <div className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground p-2 rounded-full shadow-lg">
+              <ShieldAlert className="w-5 h-5" />
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <h1 className="text-4xl font-display font-bold text-foreground">Caught you! 🕵️‍♂️</h1>
+            <p className="text-muted-foreground text-lg leading-relaxed">
+              Nice try guessing the company name, but this vault is for VIPs only.
+            </p>
+            <div className="bg-muted/50 p-6 rounded-2xl border border-dashed border-primary/20">
+              <p className="text-sm font-medium text-primary italic leading-relaxed">
+                "Wait, are you a spy? 🕵️‍♀️ Or just lost? Either way, you need a **Secret Link** or the **Master Code** to see what's in here!"
+              </p>
+            </div>
+          </div>
+
+          <Link href="/" className="block">
+            <Button className="w-full h-14 rounded-2xl font-bold text-lg shadow-lg shadow-primary/20">
+              Take me back to safety
+            </Button>
+          </Link>
+          
+          <p className="text-[10px] text-muted-foreground uppercase tracking-widest opacity-40 font-bold">
+            BucketStudy Secure-Link System v2.0
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // If we got here but have no tasks (invalid slug/name), show standard error
+  if (companyTasks.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-6 max-w-sm px-6">
+          <Ghost className="h-16 w-16 text-muted-foreground/30 mx-auto" />
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold font-display">No tasks found</h2>
+            <p className="text-muted-foreground">This link doesn't seem to lead anywhere special. Double check with Rohan!</p>
+          </div>
+          <Link href="/" className="block pt-4">
+            <Button variant="outline" className="rounded-xl px-10">Back to Home</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -242,34 +373,68 @@ export default function CompanyDetail() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card border border-border/50 rounded-3xl p-6 md:p-8 shadow-xl shadow-primary/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden"
+          className="relative overflow-hidden rounded-[2.5rem] border border-white/10 p-8 md:p-12 shadow-2xl"
+          style={{
+            background: "linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)",
+          }}
         >
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -z-10" />
-          
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-primary/10 text-primary rounded-2xl">
-                <Building2 className="w-8 h-8" />
-              </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground">
-                  {name}
-                </h1>
-                <div className="flex gap-4 mt-1 text-muted-foreground">
-                  <span className="flex items-center gap-1 text-sm font-medium">
-                    <Calendar className="w-4 h-4" />
-                    Joined {companyInfo?.dateOfJoin ? safeFormatDate(companyInfo.dateOfJoin, "MMM d, yyyy") : "N/A"}
-                  </span>
-                </div>
-              </div>
+          {/* Animated Ocean Waves */}
+          <div className="absolute inset-0 z-0 pointer-events-none opacity-30">
+            <div className="absolute bottom-0 left-0 w-[200%] h-[120px] animate-wave-slow">
+              <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-blue-400/20">
+                <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z"></path>
+              </svg>
+            </div>
+            <div className="absolute bottom-0 left-[-50%] w-[200%] h-[100px] animate-wave-medium">
+              <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-blue-300/10">
+                <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,54.7,103.42,60.53,40.88,5.79,82.35-12.47,118.55-31.7,38.2-20.28,73.43-42.82,116.88-51.72C1108.68,1.25,1176.43,19,1200,31.58V0Z"></path>
+              </svg>
+            </div>
+            <div className="absolute bottom-[-10px] left-0 w-[200%] h-[80px] animate-wave-fast">
+              <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-white/10">
+                <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z"></path>
+              </svg>
             </div>
           </div>
 
-          <div className="flex flex-col items-end gap-2">
-            <Badge variant="secondary" className="px-3 py-1 text-sm font-semibold rounded-full border-primary/10 bg-primary/5 text-primary">
-              <History className="w-4 h-4 mr-2" />
-              {companyTasks.length} Total Tasks
-            </Badge>
+          <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 w-full">
+            <div className="space-y-6">
+              <div className="flex items-center gap-5">
+                <motion.div 
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  className="p-5 bg-blue-500/20 text-blue-100 rounded-[1.5rem] backdrop-blur-md border border-white/10 shadow-xl"
+                >
+                  <Building2 className="w-10 h-10" />
+                </motion.div>
+                <div>
+                  <h1 className="text-4xl md:text-5xl font-display font-black text-white tracking-tight drop-shadow-sm">
+                    {activeCompanyName || name}
+                  </h1>
+                  <div className="flex gap-5 mt-2 text-blue-200/80">
+                    <span className="flex items-center gap-2 text-sm font-bold tracking-wide uppercase">
+                      <Calendar className="w-4 h-4 text-blue-400" />
+                      Joined {companyInfo?.dateOfJoin ? safeFormatDate(companyInfo.dateOfJoin, "MMM d, yyyy") : "N/A"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-end gap-4">
+              <Button 
+                onClick={handleShare}
+                variant="outline" 
+                size="lg" 
+                className="rounded-2xl border-white/20 bg-white/10 hover:bg-white/20 text-white font-black group px-8 py-6 h-auto backdrop-blur-md transition-all hover:scale-105"
+              >
+                <Share2 className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
+                Share Link
+              </Button>
+              <Badge variant="secondary" className="px-5 py-2 text-sm font-black rounded-full border-blue-400/20 bg-blue-400/10 text-blue-100 backdrop-blur-sm">
+                <History className="w-4 h-4 mr-2 text-blue-400" />
+                {companyTasks.length} Total Tasks
+              </Badge>
+            </div>
           </div>
         </motion.div>
       </header>

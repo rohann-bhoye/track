@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ClipboardList, Building2, Briefcase, SearchX, BarChart3 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ClipboardList, Building2, Briefcase, SearchX, BarChart3, Lock } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 
 import { useTasks } from "@/hooks/use-tasks";
@@ -11,11 +11,48 @@ import { CreateTaskModal } from "@/components/CreateTaskModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import { type Task } from "@/shared/schema";
 
 export default function Home() {
+  const [mounted, setMounted] = useState(false);
+  const [isMasterUnlocked, setIsMasterUnlocked] = useState(false);
+  const [masterCode, setMasterCode] = useState("");
   const { data: tasks, isLoading, isError } = useTasks();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const { toast } = useToast();
+  // Handle mounting and session persistence (with 1-hour expiry)
+  useEffect(() => {
+    setMounted(true);
+    const saved = localStorage.getItem("master_unlocked");
+    const unlockTime = localStorage.getItem("master_unlock_time");
+    
+    if (saved === "true" && unlockTime) {
+      const oneHour = 60 * 60 * 1000; // 3,600,000 ms
+      const isExpired = Date.now() - parseInt(unlockTime) > oneHour;
+      
+      if (isExpired) {
+        localStorage.removeItem("master_unlocked");
+        localStorage.removeItem("master_unlock_time");
+        setIsMasterUnlocked(false);
+      } else {
+        setIsMasterUnlocked(true);
+      }
+    }
+  }, []);
+
+  const handleUnlock = () => {
+    if (masterCode === "task123") {
+      setIsMasterUnlocked(true);
+      localStorage.setItem("master_unlocked", "true");
+      localStorage.setItem("master_unlock_time", Date.now().toString());
+      toast({ title: "Welcome back, Rohan", description: "Dashboard unlocked successfully." });
+    } else {
+      toast({ title: "Access Denied", description: "Invalid master code.", variant: "destructive" });
+      setMasterCode("");
+    }
+  };
 
   // Group tasks by company - Moved to top level to satisfy Rules of Hooks
   const groupedByCompany = useMemo(() => {
@@ -35,8 +72,67 @@ export default function Home() {
     [groupedByCompany]
   );
 
+  // Avoid hydration mismatch by rendering a consistent initial state
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-background">
+        <HeroSectionSkeleton />
+      </div>
+    );
+  }
+
+  if (!isMasterUnlocked) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="fixed top-0 left-0 w-full h-[300px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none -z-10" />
+        <div className="fixed bottom-0 right-0 w-[50%] h-[50%] rounded-full bg-primary/5 blur-[120px] pointer-events-none -z-10" />
+        
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-md bg-card border border-border/50 rounded-[2.5rem] p-8 sm:p-12 shadow-2xl relative"
+        >
+          <div className="flex flex-col items-center text-center space-y-6">
+            <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center text-primary mb-2 rotate-3 hover:rotate-0 transition-transform duration-300">
+              <Lock className="w-10 h-10" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-display font-bold text-foreground">Master Dashboard</h1>
+              <p className="text-muted-foreground text-sm max-w-[280px]">
+                Enter your secure master code to access the full professional dashboard.
+              </p>
+            </div>
+            
+            <div className="w-full space-y-4 pt-4">
+              <Input 
+                type="password" 
+                placeholder="Master Code" 
+                className="text-center text-2xl tracking-[0.5em] font-mono h-16 rounded-2xl border-primary/20 focus:border-primary/50 bg-muted/30"
+                value={masterCode}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMasterCode(e.target.value)}
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && handleUnlock()}
+              />
+              <Button 
+                onClick={handleUnlock}
+                className="w-full h-14 font-bold text-lg rounded-2xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 group"
+              >
+                Access Dashboard
+                <ClipboardList className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </div>
+            
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-[0.2em] opacity-40">
+              Rohan Bhoye Professional Utility
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   // Show a beautifully staggered skeleton loader
   if (isLoading) {
+// ... existing loader code ...
     return (
       <div className="min-h-screen bg-background">
         <HeroSectionSkeleton />

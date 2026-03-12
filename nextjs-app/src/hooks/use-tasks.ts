@@ -11,11 +11,12 @@ function parseWithLogging<T>(schema: any, data: unknown, label: string): T {
   return result.data as T;
 }
 
-export function useTasks() {
+export function useTasks(companyName?: string) {
   return useQuery({
-    queryKey: [api.tasks.list.path],
+    queryKey: [api.tasks.list.path, companyName],
     queryFn: async () => {
-      const res = await fetch("/api/tasks");
+      const url = companyName ? `/api/tasks?company=${encodeURIComponent(companyName)}` : "/api/tasks";
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch tasks");
       const data = await res.json();
       return parseWithLogging<Task[]>(api.tasks.list.responses[200], data, "tasks.list");

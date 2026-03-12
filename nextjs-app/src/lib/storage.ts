@@ -4,7 +4,7 @@ import { db } from "./firebase";
 
 
 export interface IStorage {
-  getTasks(): Promise<Task[]>;
+  getTasks(companyName?: string): Promise<Task[]>;
   createTask(task: InsertTask): Promise<Task>;
   createTasks(tasks: InsertTask[]): Promise<Task[]>;
   updateTask(id: any, updates: Partial<Task>): Promise<Task>;
@@ -14,18 +14,47 @@ export interface IStorage {
 export class FirebaseStorage implements IStorage {
   private collectionRef = collection(db, "tasks");
 
-  async getTasks(): Promise<Task[]> {
-    const q = query(this.collectionRef, orderBy("createdAt", "desc"));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        ...data,
-        id: doc.id as any,
-        createdAt: data.createdAt?.toDate() || null,
-        completedAt: data.completedAt?.toDate() || null,
-      } as Task;
-    });
+  // Helper to generate a stable but unguessable slug for a company
+  getCompanySlug(name: string): string {
+    // A simple deterministic transformation that's not obvious
+    // In a real app we'd use a crypto hash or store this in DB
+    const secret = "rohan-secret-2024";
+    const buffer = Buffer.from(secret + name);
+    // Use a simple hash-like slice or a real hash
+    return buffer.toString("hex").substring(10, 22).toLowerCase();
+  }
+
+  async getTasks(identifier?: string): Promise<Task[]> {
+    try {
+      const q = query(this.collectionRef, orderBy("createdAt", "desc"));
+      const querySnapshot = await getDocs(q);
+      
+      let tasks = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id as any,
+          createdAt: data.createdAt?.toDate() || null,
+          completedAt: data.completedAt?.toDate() || null,
+        } as Task;
+      });
+
+      if (identifier) {
+        const target = decodeURIComponent(identifier).trim().toLowerCase();
+        
+        // Check if identifier is a Name or a Slug
+        return tasks.filter(t => {
+          const name = t.companyName.trim().toLowerCase();
+          const slug = this.getCompanySlug(t.companyName).toLowerCase();
+          return name === target || slug === target;
+        });
+      }
+
+      return tasks;
+    } catch (e) {
+      console.error("Firebase getTasks error:", e);
+      throw e;
+    }
   }
 
   async createTask(insertTask: InsertTask): Promise<Task> {

@@ -1,18 +1,21 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { format, parseISO } from "date-fns";
 import {
   BarChart3, Building2, CheckCircle2, Clock, ArrowLeft,
-  CalendarDays, ListChecks, TrendingUp, FileText
+  CalendarDays, ListChecks, TrendingUp, FileText, Lock
 } from "lucide-react";
 import { useTasks } from "@/hooks/use-tasks";
 import { type Task } from "@/shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 function safeFormat(dateStr: string | null | undefined, fmt: string) {
@@ -22,7 +25,41 @@ function safeFormat(dateStr: string | null | undefined, fmt: string) {
 }
 
 export default function ReportPage() {
+  const [mounted, setMounted] = useState(false);
+  const [isMasterUnlocked, setIsMasterUnlocked] = useState(false);
+  const [masterCode, setMasterCode] = useState("");
   const { data: tasks, isLoading, isError } = useTasks();
+  const { toast } = useToast();
+  // Handle mounting and session persistence (with 1-hour expiry)
+  useEffect(() => {
+    setMounted(true);
+    const saved = localStorage.getItem("master_unlocked");
+    const unlockTime = localStorage.getItem("master_unlock_time");
+    
+    if (saved === "true" && unlockTime) {
+      const oneHour = 60 * 60 * 1000;
+      const isExpired = Date.now() - parseInt(unlockTime) > oneHour;
+      
+      if (isExpired) {
+        localStorage.removeItem("master_unlocked");
+        localStorage.removeItem("master_unlock_time");
+        setIsMasterUnlocked(false);
+      } else {
+        setIsMasterUnlocked(true);
+      }
+    }
+  }, []);
+
+  const handleUnlock = () => {
+    if (masterCode === "task123") {
+      setIsMasterUnlocked(true);
+      localStorage.setItem("master_unlocked", "true");
+      localStorage.setItem("master_unlock_time", Date.now().toString());
+    } else {
+      toast({ title: "Access Denied", description: "Invalid master code.", variant: "destructive" });
+      setMasterCode("");
+    }
+  };
 
   const stats = useMemo(() => {
     if (!tasks || tasks.length === 0) return null;
@@ -42,7 +79,68 @@ export default function ReportPage() {
     return { total, completed, inProgress, companies, byCompany };
   }, [tasks]);
 
+  // Avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-background max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+        <Skeleton className="h-10 w-48 rounded-xl" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (!isMasterUnlocked) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="fixed top-0 left-0 w-full h-[300px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none -z-10" />
+        
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-md bg-card border border-border/50 rounded-[2.5rem] p-8 sm:p-12 shadow-2xl relative"
+        >
+          <div className="flex flex-col items-center text-center space-y-6">
+            <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center text-primary mb-2 rotate-3 hover:rotate-0 transition-transform duration-300">
+              <BarChart3 className="w-10 h-10" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-display font-bold text-foreground">Detailed Report</h1>
+              <p className="text-muted-foreground text-sm max-w-[280px]">
+                Enter your secure master code to view the professional report.
+              </p>
+            </div>
+            
+            <div className="w-full space-y-4 pt-4">
+              <Input 
+                type="password" 
+                placeholder="Master Code" 
+                className="text-center text-2xl tracking-[0.5em] font-mono h-16 rounded-2xl border-primary/20 focus:border-primary/50 bg-muted/30"
+                value={masterCode}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMasterCode(e.target.value)}
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && handleUnlock()}
+              />
+              <Button 
+                onClick={handleUnlock}
+                className="w-full h-14 font-bold text-lg rounded-2xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 group"
+              >
+                View Report
+                <TrendingUp className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </div>
+            
+            <Link href="/" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              Return to Dashboard
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   if (isLoading) {
+// ... existing loader code ...
     return (
       <div className="min-h-screen bg-background max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-8">
         <Skeleton className="h-10 w-48 rounded-xl" />

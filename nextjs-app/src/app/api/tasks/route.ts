@@ -3,11 +3,16 @@ import { storage } from '@/lib/storage';
 import { createTasksBulkRequestSchema } from '@/shared/schema';
 import { z } from 'zod';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const allTasks = await storage.getTasks();
+    const { searchParams } = new URL(req.url);
+    const company = searchParams.get('company') || undefined;
+    console.log(`[API] Fetching tasks for company: ${company || "ALL"}`);
+    const allTasks = await storage.getTasks(company);
+    console.log(`[API] Found ${allTasks.length} tasks`);
     return NextResponse.json(allTasks);
   } catch (error) {
+    console.error(`[API] Failed to fetch tasks:`, error);
     return NextResponse.json({ message: "Failed to fetch tasks" }, { status: 500 });
   }
 }
