@@ -53,6 +53,22 @@ export class FirebaseStorage implements IStorage {
     
     if (updates.status === "completed") {
       firestoreUpdates.completedAt = Timestamp.now();
+      
+      // If we're marking as completed, check if it's a different day from original work date
+      // We need to fetch the current task data to compare taskDate
+      try {
+        const { getDoc } = await import("firebase/firestore");
+        const currentDoc = await getDoc(docRef);
+        const currentData = currentDoc.data();
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        
+        if (currentData && currentData.taskDate && currentData.taskDate !== today) {
+          firestoreUpdates.originalDate = currentData.taskDate;
+          firestoreUpdates.taskDate = today;
+        }
+      } catch (e) {
+        console.error("Error updating taskDate on completion:", e);
+      }
     } else if (updates.status === "in_progress") {
       firestoreUpdates.completedAt = null;
     }

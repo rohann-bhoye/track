@@ -14,6 +14,7 @@ const taskSchema = z.object({
   proofLink: z.string().nullable().optional(),
   createdAt: z.coerce.date().nullable(),
   completedAt: z.coerce.date().nullable(),
+  originalDate: z.string().nullable().optional(),
 });
 
 

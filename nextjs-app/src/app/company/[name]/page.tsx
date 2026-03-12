@@ -333,6 +333,13 @@ export default function CompanyDetail() {
                                  Completed: {safeFormatDate(task.completedAt, "MMM d, h:mm a")}
                                </Badge>
                              )}
+
+                             {task.originalDate && (
+                               <Badge variant="outline" className="rounded-lg bg-amber-50 border-amber-200 px-2.5 py-1 text-amber-700 flex items-center gap-1.5 font-bold shadow-sm">
+                                 <History className="w-3.5 h-3.5" />
+                                 Comes from: {safeFormatDate(task.originalDate, "MMM d")}
+                               </Badge>
+                             )}
                           </div>
 
                           <div className="flex gap-3">

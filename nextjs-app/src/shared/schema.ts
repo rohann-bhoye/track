@@ -25,6 +25,7 @@ export const taskSchema = z.object({
   proofLink: z.string().nullable().optional(),
   createdAt: z.coerce.date().nullable(),
   completedAt: z.coerce.date().nullable(),
+  originalDate: z.string().nullable().optional(),
 });
 
 export const createTasksBulkRequestSchema = z.object({
@@ -54,6 +55,7 @@ export const updateTaskStatusSchema = z.object({
   taskDate: z.string().optional(),
   description: z.string().optional(),
   proofLink: z.string().optional(),
+  originalDate: z.string().optional(),
   secretCode: z.string().min(1, "Secret code is required"),
 });
 
