@@ -441,19 +441,19 @@ export function CreateTaskModal() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-background/95 backdrop-blur-sm -mx-6 px-6 py-4 border-t border-border/10">
+                  <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 sticky bottom-0 bg-background/95 backdrop-blur-sm -mx-6 px-6 py-4 border-t border-border/10">
                     <Button 
                       type="button" 
                       variant="outline" 
                       onClick={() => setOpen(false)}
-                      className="rounded-lg h-10 px-6"
+                      className="rounded-lg h-10 px-6 w-full sm:w-auto"
                     >
                       Cancel
                     </Button>
                     <Button 
                       type="submit" 
                       disabled={createTask.isPending}
-                      className="rounded-lg h-10 px-8 bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 transition-all font-semibold"
+                      className="rounded-lg h-10 px-8 bg-primary hover:bg-primary/90 shadow-md shadow-primary/20 transition-all font-semibold w-full sm:w-auto"
                     >
                       {createTask.isPending ? (
                         <>

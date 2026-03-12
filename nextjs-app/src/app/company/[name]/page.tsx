@@ -12,7 +12,7 @@ const safeFormatDate = (dateOrString: any, formatStr: string) => {
   } else {
     date = dateOrString;
   }
-  return isValid(date) ? format(date, formatStr) : "Invalid Date";
+  return isValid(date) ? format(date, formatStr) : dateOrString;
 };
 import {
   ArrowLeft,
@@ -399,15 +399,15 @@ export default function CompanyDetail() {
 
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 w-full">
             <div className="space-y-6">
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3 sm:gap-5">
                 <motion.div 
                   whileHover={{ scale: 1.05, rotate: 5 }}
-                  className="p-5 bg-blue-500/20 text-blue-100 rounded-[1.5rem] backdrop-blur-md border border-white/10 shadow-xl"
+                  className="p-3.5 sm:p-5 bg-blue-500/20 text-blue-100 rounded-[1.25rem] sm:rounded-[1.5rem] backdrop-blur-md border border-white/10 shadow-xl"
                 >
-                  <Building2 className="w-10 h-10" />
+                  <Building2 className="w-7 h-7 sm:w-10 h-10" />
                 </motion.div>
                 <div>
-                  <h1 className="text-4xl md:text-5xl font-display font-black text-white tracking-tight drop-shadow-sm">
+                  <h1 className="text-2xl min-[400px]:text-3xl sm:text-4xl md:text-5xl font-display font-black text-white tracking-tight drop-shadow-sm leading-tight">
                     {activeCompanyName || name}
                   </h1>
                   <div className="flex gap-5 mt-2 text-blue-200/80">
@@ -420,17 +420,17 @@ export default function CompanyDetail() {
               </div>
             </div>
 
-            <div className="flex flex-col items-end gap-4">
+            <div className="flex flex-col items-start sm:items-end gap-4 w-full sm:w-auto mt-6 md:mt-0">
               <Button 
                 onClick={handleShare}
                 variant="outline" 
                 size="lg" 
-                className="rounded-2xl border-white/20 bg-white/10 hover:bg-white/20 text-white font-black group px-8 py-6 h-auto backdrop-blur-md transition-all hover:scale-105"
+                className="w-full sm:w-auto rounded-2xl border-white/20 bg-white/10 hover:bg-white/20 text-white font-black group px-8 py-6 h-auto backdrop-blur-md transition-all hover:scale-105"
               >
                 <Share2 className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
                 Share Link
               </Button>
-              <Badge variant="secondary" className="px-5 py-2 text-sm font-black rounded-full border-blue-400/20 bg-blue-400/10 text-blue-100 backdrop-blur-sm">
+              <Badge variant="secondary" className="px-5 py-2 text-sm font-black rounded-full border-blue-400/20 bg-blue-400/10 text-blue-100 backdrop-blur-sm self-start sm:self-auto">
                 <History className="w-4 h-4 mr-2 text-blue-400" />
                 {companyTasks.length} Total Tasks
               </Badge>

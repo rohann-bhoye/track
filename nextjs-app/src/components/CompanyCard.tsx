@@ -55,7 +55,7 @@ export function CompanyCard({ name, tasks, index }: CompanyCardProps) {
               </div>
             </div>
 
-            <h3 className="text-2xl font-display font-bold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-1">
+            <h3 className="text-xl sm:text-2xl font-display font-bold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-1">
               {name}
             </h3>
 

@@ -65,7 +65,7 @@ export function TaskRow({ task }: TaskRowProps) {
   const isUpdating = updateStatusMutation.isPending;
 
   return (
-    <div className="flex items-center gap-4 p-4 bg-card border border-border/50 rounded-lg hover:shadow-md transition-shadow group">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-card border border-border/50 rounded-lg hover:shadow-md transition-shadow group w-full">
       {/* Status Badge/Toggle */}
       <div className="flex-shrink-0">
         {isCompleted ? (

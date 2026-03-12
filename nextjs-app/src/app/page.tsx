@@ -107,7 +107,7 @@ export default function Home() {
               <Input 
                 type="password" 
                 placeholder="Master Code" 
-                className="text-center text-2xl tracking-[0.5em] font-mono h-16 rounded-2xl border-primary/20 focus:border-primary/50 bg-muted/30"
+                className="text-center text-lg sm:text-2xl tracking-[0.2em] sm:tracking-[0.5em] h-16 rounded-2xl border-primary/20 focus:border-primary/50 bg-muted/30"
                 value={masterCode}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMasterCode(e.target.value)}
                 onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && handleUnlock()}
