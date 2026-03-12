@@ -123,6 +123,16 @@ export default function CompanyDetail() {
       const dateStr = task.taskDate;
       if (!groups[dateStr]) groups[dateStr] = [];
       groups[dateStr].push(task);
+
+      // If task has an originalDate, also add a "ghost" of it to that date group
+      if (task.originalDate && task.originalDate !== task.taskDate) {
+        if (!groups[task.originalDate]) groups[task.originalDate] = [];
+        groups[task.originalDate].push({
+          ...task,
+          id: `ghost-${task.id}`,
+          isGhost: true
+        } as any);
+      }
     });
     
     // Inject Sundays if missing
@@ -291,34 +301,44 @@ export default function CompanyDetail() {
 
               <div className="grid gap-4 ml-0 sm:ml-14">
                 {tasks.map((task) => (
-                  <Card key={task.id} className="group border-border/40 hover:border-primary/30 transition-all duration-300 shadow-sm hover:shadow-md bg-card/50 backdrop-blur-sm relative overflow-hidden">
+                  <Card key={task.id} className={cn(
+                    "group border-border/40 hover:border-primary/30 transition-all duration-300 shadow-sm hover:shadow-md bg-card/50 backdrop-blur-sm relative overflow-hidden",
+                    (task as any).isGhost && "border-dashed border-slate-200 bg-slate-50/30"
+                  )}>
                     <CardContent className="p-4 sm:p-6">
                       <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-6">
                         <div className="space-y-4 flex-grow">
                           <div className="flex flex-wrap gap-3">
-                            <Badge className={cn(
-                              "font-semibold rounded-lg px-2.5 py-1",
-                              task.status === "completed" 
-                                ? "bg-green-50 text-green-600 border-green-100 hover:bg-green-100" 
-                                : task.status === "holiday"
-                                ? "bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100"
-                                : task.status === "leave"
-                                ? "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
-                                : "bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100"
-                            )}>
-                              {task.status === "completed" ? (
-                                <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-                              ) : task.status === "holiday" ? (
-                                <Palmtree className="w-3.5 h-3.5 mr-1.5" />
-                              ) : task.status === "leave" ? (
-                                <CalendarX className="w-3.5 h-3.5 mr-1.5" />
-                              ) : (
-                                <Clock className="w-3.5 h-3.5 mr-1.5" />
-                              )}
-                              {task.status === "completed" ? "Completed" : 
-                               task.status === "holiday" ? "Holiday" :
-                               task.status === "leave" ? "Leave" : "In Progress"}
-                            </Badge>
+                            {(task as any).isGhost ? (
+                              <Badge className="font-semibold rounded-lg px-2.5 py-1 bg-slate-100 text-slate-500 border-slate-200">
+                                <History className="w-3.5 h-3.5 mr-1.5" />
+                                Shifted
+                              </Badge>
+                            ) : (
+                              <Badge className={cn(
+                                "font-semibold rounded-lg px-2.5 py-1",
+                                task.status === "completed" 
+                                  ? "bg-green-50 text-green-600 border-green-100 hover:bg-green-100" 
+                                  : task.status === "holiday"
+                                  ? "bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100"
+                                  : task.status === "leave"
+                                  ? "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100"
+                                  : "bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100"
+                              )}>
+                                {task.status === "completed" ? (
+                                  <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                                ) : task.status === "holiday" ? (
+                                  <Palmtree className="w-3.5 h-3.5 mr-1.5" />
+                                ) : task.status === "leave" ? (
+                                  <CalendarX className="w-3.5 h-3.5 mr-1.5" />
+                                ) : (
+                                  <Clock className="w-3.5 h-3.5 mr-1.5" />
+                                )}
+                                {task.status === "completed" ? "Completed" : 
+                                 task.status === "holiday" ? "Holiday" :
+                                 task.status === "leave" ? "Leave" : "In Progress"}
+                              </Badge>
+                            )}
 
                              {task.createdAt && (
                                <Badge variant="outline" className="rounded-lg bg-background/50 border-border px-2.5 py-1 text-muted-foreground flex items-center gap-1.5">
@@ -342,10 +362,19 @@ export default function CompanyDetail() {
                              )}
                           </div>
 
-                          <div className="flex gap-3">
-                            <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
+                          <div className="flex flex-col gap-1">
+                            <p className={cn(
+                              "text-foreground text-sm leading-relaxed whitespace-pre-wrap",
+                              (task as any).isGhost && "opacity-60 italic"
+                            )}>
                               {task.description}
                             </p>
+                            {(task as any).isGhost && (
+                              <p className="text-[11px] text-slate-500 font-medium flex items-center gap-1 mt-1">
+                                <ArrowLeft className="w-3 h-3" />
+                                This task was shifted to {safeFormatDate(task.taskDate, "MMM d, yyyy")} for completion.
+                              </p>
+                            )}
                           </div>
 
                           {(task as any).proofLink && (
@@ -364,22 +393,26 @@ export default function CompanyDetail() {
                         </div>
 
                         <div className="flex gap-2 shrink-0 sm:opacity-0 group-hover:opacity-100 transition-opacity self-end sm:self-start">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleEditClick(task)}
-                            className="rounded-xl hover:bg-primary/5 text-muted-foreground hover:text-primary"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleDeleteTask(task)}
-                            className="rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {!(task as any).isGhost && (
+                            <>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleEditClick(task)}
+                                className="rounded-xl hover:bg-primary/5 text-muted-foreground hover:text-primary"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleDeleteTask(task)}
+                                className="rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </CardContent>
