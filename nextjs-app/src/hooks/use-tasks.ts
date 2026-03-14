@@ -143,17 +143,48 @@ export function useDeleteCompanyTasks() {
       });
       
       if (!res.ok) {
-        if (res.status === 401) {
-          throw new Error("Invalid secret code.");
-        }
+        if (res.status === 401) throw new Error("Invalid secret code.");
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.message || "Delete company failed.");
       }
-      
       return await res.json();
     },
-    onSuccess: () => {
+    onMutate: async ({ companyName }) => {
+      await queryClient.cancelQueries({ queryKey: [api.tasks.list.path] });
+      await queryClient.cancelQueries({ queryKey: ['/api/tasks/trash'] });
+
+      const previousTasks = queryClient.getQueryData<Task[]>([api.tasks.list.path]);
+      const previousTrash = queryClient.getQueryData<Task[]>(['/api/tasks/trash']);
+
+      if (previousTasks) {
+        const deletedTasks = previousTasks.filter(t => t.companyName === companyName);
+        // Optimistically remove tasks of this company from main list
+        queryClient.setQueryData<Task[]>([api.tasks.list.path], 
+          previousTasks.filter(t => t.companyName !== companyName)
+        );
+        
+        // Optimistically add to trash list
+        if (previousTrash) {
+          queryClient.setQueryData<Task[]>(['/api/tasks/trash'], [
+            ...previousTrash,
+            ...deletedTasks.map(t => ({ ...t, deletedAt: new Date().toISOString() }))
+          ]);
+        }
+      }
+
+      return { previousTasks, previousTrash };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousTasks) {
+        queryClient.setQueryData([api.tasks.list.path], context.previousTasks);
+      }
+      if (context?.previousTrash) {
+        queryClient.setQueryData(['/api/tasks/trash'], context.previousTrash);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [api.tasks.list.path] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks/trash'] });
     },
   });
 }
@@ -167,6 +198,8 @@ export function useTrashTasks() {
       const data = await res.json();
       return parseWithLogging<Task[]>(api.tasks.list.responses[200], data, "tasks.trash");
     },
+    staleTime: 60000, // Keep data fresh for 1 minute
+    gcTime: 1000 * 60 * 10, // Keep in garbage for 10 minutes
   });
 }
 
@@ -182,16 +215,46 @@ export function useRestoreCompanyTasks() {
       });
       
       if (!res.ok) {
-        if (res.status === 401) {
-          throw new Error("Invalid secret code.");
-        }
+        if (res.status === 401) throw new Error("Invalid secret code.");
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.message || "Restore company failed.");
       }
-      
       return await res.json();
     },
-    onSuccess: () => {
+    onMutate: async ({ companyName }) => {
+      await queryClient.cancelQueries({ queryKey: [api.tasks.list.path] });
+      await queryClient.cancelQueries({ queryKey: ['/api/tasks/trash'] });
+
+      const previousTasks = queryClient.getQueryData<Task[]>([api.tasks.list.path]);
+      const previousTrash = queryClient.getQueryData<Task[]>(['/api/tasks/trash']);
+
+      if (previousTrash) {
+        const restoredTasks = previousTrash.filter(t => t.companyName === companyName);
+        // Optimistically remove from trash list
+        queryClient.setQueryData<Task[]>(['/api/tasks/trash'], 
+          previousTrash.filter(t => t.companyName !== companyName)
+        );
+        
+        // Optimistically add back to main list
+        if (previousTasks) {
+          queryClient.setQueryData<Task[]>([api.tasks.list.path], [
+            ...previousTasks,
+            ...restoredTasks.map(t => ({ ...t, deletedAt: null }))
+          ]);
+        }
+      }
+
+      return { previousTasks, previousTrash };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousTasks) {
+        queryClient.setQueryData([api.tasks.list.path], context.previousTasks);
+      }
+      if (context?.previousTrash) {
+        queryClient.setQueryData(['/api/tasks/trash'], context.previousTrash);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [api.tasks.list.path] });
       queryClient.invalidateQueries({ queryKey: ['/api/tasks/trash'] });
     },
@@ -210,17 +273,29 @@ export function usePermanentDeleteCompanyTasks() {
       });
       
       if (!res.ok) {
-        if (res.status === 401) {
-          throw new Error("Invalid secret code.");
-        }
+        if (res.status === 401) throw new Error("Invalid secret code.");
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.message || "Delete company permanently failed.");
       }
-      
       return await res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.tasks.list.path] });
+    onMutate: async ({ companyName }) => {
+      await queryClient.cancelQueries({ queryKey: ['/api/tasks/trash'] });
+      const previousTrash = queryClient.getQueryData<Task[]>(['/api/tasks/trash']);
+
+      if (previousTrash) {
+        queryClient.setQueryData<Task[]>(['/api/tasks/trash'], 
+          previousTrash.filter(t => t.companyName !== companyName)
+        );
+      }
+      return { previousTrash };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousTrash) {
+        queryClient.setQueryData(['/api/tasks/trash'], context.previousTrash);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks/trash'] });
     },
   });

@@ -114,7 +114,7 @@ export function TrashModal() {
         </div>
 
         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
-          {isLoading ? (
+          {isLoading && !trashTasks ? (
             <div className="flex justify-center p-6 sm:p-8"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
           ) : companyEntries.length === 0 ? (
             <div className="text-center py-8 sm:py-12 text-muted-foreground flex flex-col items-center">
