@@ -695,17 +695,29 @@ export default function CompanyDetail() {
                 />
                 <Button 
                   onClick={() => {
-                    if (authCode === "task123") {
-                      setIsAuthorized(true);
-                      toast({ title: "Unlocked", description: "Form is now editable." });
-                    } else {
-                      toast({ title: "Access Denied 🛑", description: "Invalid code! Are you guessing randomly?", variant: "destructive" });
-                      setAuthCode("");
+                    if (!authCode) {
+                      toast({ title: "Error", description: "Please enter the secret code." });
+                      return;
                     }
+                    verifyCode.mutate(authCode, {
+                      onSuccess: () => {
+                        setIsAuthorized(true);
+                        toast({ title: "Unlocked", description: "Form is now editable." });
+                      },
+                      onError: (error: Error) => {
+                        toast({ 
+                          title: "Access Denied 🛑", 
+                          description: error.message || "Invalid code!", 
+                          variant: "destructive" 
+                        });
+                        setAuthCode("");
+                      }
+                    });
                   }} 
-                  className="w-full h-12 font-bold text-lg rounded-2xl shadow-lg shadow-primary/20"
+                  className="w-full h-12 font-bold text-lg rounded-2xl shadow-lg shadow-primary/20 hover:shadow-primary/30"
+                  disabled={verifyCode.isPending}
                 >
-                  Unlock Form
+                  {verifyCode.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Unlock Form"}
                 </Button>
               </div>
               <Button variant="ghost" onClick={() => setEditingTask(null)} className="text-muted-foreground">
@@ -850,7 +862,7 @@ export default function CompanyDetail() {
                         type="submit" 
                         disabled={updateTask.isPending} 
                         className="rounded-2xl h-12 px-10 font-bold shadow-xl shadow-primary/20"
-                        onMouseEnter={() => editForm.setValue("secretCode", "task123")} // Pre-fill once authorized to match server schema
+                        onMouseEnter={() => editForm.setValue("secretCode", authCode)} // Pre-fill with verified code to match server schema
                       >
                         {updateTask.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                         Apply Changes

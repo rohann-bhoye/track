@@ -5,7 +5,7 @@ import { ClipboardList, Building2, Briefcase, SearchX, BarChart3, Lock } from "l
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 
-import { useTasks } from "@/hooks/use-tasks";
+import { useTasks, useVerifyCode } from "@/hooks/use-tasks";
 import { CompanyCard } from "@/components/CompanyCard";
 import { CreateTaskModal } from "@/components/CreateTaskModal";
 import { SetNextWeekPlanModal } from "@/components/SetNextWeekPlanModal";
@@ -24,6 +24,8 @@ export default function Home() {
   const { data: tasks, isLoading, isError } = useTasks();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const { toast } = useToast();
+  const verifyCode = useVerifyCode();
+
   // Handle mounting and session persistence (with 1-hour expiry)
   useEffect(() => {
     setMounted(true);
@@ -45,15 +47,30 @@ export default function Home() {
   }, []);
 
   const handleUnlock = () => {
-    if (masterCode === "task123") {
-      setIsMasterUnlocked(true);
-      localStorage.setItem("master_unlocked", "true");
-      localStorage.setItem("master_unlock_time", Date.now().toString());
-      toast({ title: "Welcome back, Rohan", description: "Dashboard unlocked successfully." });
-    } else {
-      toast({ title: "Access Denied 🛑", description: "Nice try, hacker! But that's not the master code.", variant: "destructive" });
-      setMasterCode("");
+    if (!masterCode) {
+      toast({ title: "Error", description: "Please enter the secret code." });
+      return;
     }
+
+    verifyCode.mutate(masterCode, {
+      onSuccess: () => {
+        setIsMasterUnlocked(true);
+        localStorage.setItem("master_unlocked", "true");
+        localStorage.setItem("master_unlock_time", Date.now().toString());
+        toast({ 
+          title: "Welcome back, Rohan", 
+          description: "Dashboard unlocked successfully." 
+        });
+      },
+      onError: (err: any) => {
+        toast({ 
+          title: "Access Denied 🛑", 
+          description: err.message || "Nice try, hacker! That's not the master code.", 
+          variant: "destructive" 
+        });
+        setMasterCode("");
+      }
+    });
   };
 
   // Group tasks by company - Moved to top level to satisfy Rules of Hooks

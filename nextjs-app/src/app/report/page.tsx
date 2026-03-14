@@ -8,7 +8,7 @@ import {
   BarChart3, Building2, CheckCircle2, Clock, ArrowLeft,
   CalendarDays, ListChecks, TrendingUp, FileText, Lock
 } from "lucide-react";
-import { useTasks } from "@/hooks/use-tasks";
+import { useTasks, useVerifyCode } from "@/hooks/use-tasks";
 import { type Task } from "@/shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +30,8 @@ export default function ReportPage() {
   const [masterCode, setMasterCode] = useState("");
   const { data: tasks, isLoading, isError } = useTasks();
   const { toast } = useToast();
+  const verifyCode = useVerifyCode();
+
   // Handle mounting and session persistence (with 1-hour expiry)
   useEffect(() => {
     setMounted(true);
@@ -51,14 +53,27 @@ export default function ReportPage() {
   }, []);
 
   const handleUnlock = () => {
-    if (masterCode === "task123") {
-      setIsMasterUnlocked(true);
-      localStorage.setItem("master_unlocked", "true");
-      localStorage.setItem("master_unlock_time", Date.now().toString());
-    } else {
-      toast({ title: "Access Denied 🛑", description: "Nice try, hacker! But that's not the master code.", variant: "destructive" });
-      setMasterCode("");
+    if (!masterCode) {
+      toast({ title: "Error", description: "Please enter the secret code." });
+      return;
     }
+
+    verifyCode.mutate(masterCode, {
+      onSuccess: () => {
+        setIsMasterUnlocked(true);
+        localStorage.setItem("master_unlocked", "true");
+        localStorage.setItem("master_unlock_time", Date.now().toString());
+        toast({ title: "Access Granted", description: "Welcome to the reports section." });
+      },
+      onError: (err: any) => {
+        toast({ 
+          title: "Access Denied 🛑", 
+          description: err.message || "That is not the correct master code.", 
+          variant: "destructive" 
+        });
+        setMasterCode("");
+      }
+    });
   };
 
   const stats = useMemo(() => {
