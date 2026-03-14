@@ -26,6 +26,7 @@ export const taskSchema = z.object({
   createdAt: z.coerce.date().nullable(),
   completedAt: z.coerce.date().nullable(),
   originalDate: z.string().nullable().optional(),
+  deletedAt: z.coerce.date().nullable().optional(),
 });
 
 export const createTasksBulkRequestSchema = z.object({

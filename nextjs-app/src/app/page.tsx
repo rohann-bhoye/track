@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useTasks } from "@/hooks/use-tasks";
 import { CompanyCard } from "@/components/CompanyCard";
 import { CreateTaskModal } from "@/components/CreateTaskModal";
+import { TrashModal } from "@/components/TrashModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -230,7 +231,8 @@ export default function Home() {
             </Badge>
           </div>
           
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <TrashModal />
             {hasTasks && (
               <Link href="/report" className="w-full sm:w-auto">
                 <Button variant="outline" size="lg" className="h-11 rounded-xl font-bold w-full sm:w-auto">
@@ -247,7 +249,7 @@ export default function Home() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center py-20 px-4 text-center bg-card rounded-[2.5rem] border border-dashed border-border/60 shadow-sm"
+            className="flex flex-col items-center justify-center py-12 sm:py-20 px-4 text-center bg-card rounded-[2.5rem] border border-dashed border-border/60 shadow-sm"
           >
             <div className="w-24 h-24 bg-primary/5 rounded-full flex items-center justify-center mb-8">
               <Briefcase className="w-12 h-12 text-primary/40" />

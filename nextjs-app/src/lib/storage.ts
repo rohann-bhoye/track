@@ -10,6 +10,8 @@ export interface IStorage {
   updateTask(id: any, updates: Partial<Task>): Promise<Task>;
   deleteTask(id: any): Promise<void>;
   deleteCompanyTasks(companyName: string): Promise<void>;
+  restoreCompanyTasks(companyName: string): Promise<void>;
+  permanentlyDeleteCompanyTasks(companyName: string): Promise<void>;
 }
 
 export class FirebaseStorage implements IStorage {
@@ -25,7 +27,7 @@ export class FirebaseStorage implements IStorage {
     return buffer.toString("hex").substring(10, 22).toLowerCase();
   }
 
-  async getTasks(identifier?: string): Promise<Task[]> {
+  async getTasks(identifier?: string, includeDeleted: boolean = false): Promise<Task[]> {
     try {
       const q = query(this.collectionRef, orderBy("createdAt", "desc"));
       const querySnapshot = await getDocs(q);
@@ -39,6 +41,35 @@ export class FirebaseStorage implements IStorage {
           completedAt: data.completedAt?.toDate() || null,
         } as Task;
       });
+
+      // Filter based on includeDeleted flag
+      // If includeDeleted is true, ONLY show soft-deleted tasks (for the Trash view)
+      // If includeDeleted is false, ONLY show active tasks
+      tasks = tasks.filter(t => {
+        const isDeleted = !!t.deletedAt;
+        return includeDeleted ? isDeleted : !isDeleted;
+      });
+
+      // Cleanup logic: If we encounter deleted tasks older than 15 days when querying the trash
+      if (includeDeleted) {
+        const now = new Date();
+        const expirationDays = 15;
+        
+        tasks = tasks.filter(t => {
+          if (!t.deletedAt) return false;
+          
+          const deletedDate = new Date(t.deletedAt);
+          const differenceInTime = now.getTime() - deletedDate.getTime();
+          const differenceInDays = differenceInTime / (1000 * 3600 * 24);
+          
+          if (differenceInDays > expirationDays) {
+            // Delete permanently in the background
+            this.deleteTask(t.id).catch(err => console.error("Auto cleanup failed for task", t.id, err));
+            return false; // Don't return it
+          }
+          return true;
+        });
+      }
 
       if (identifier) {
         const target = decodeURIComponent(identifier).trim().toLowerCase();
@@ -114,6 +145,31 @@ export class FirebaseStorage implements IStorage {
   }
 
   async deleteCompanyTasks(companyName: string): Promise<void> {
+    const { getDocs, query, where, updateDoc } = await import("firebase/firestore");
+    const q = query(this.collectionRef, where("companyName", "==", companyName));
+    const querySnapshot = await getDocs(q);
+    
+    // Soft delete: set deletedAt property instead of deleting document completely
+    const deletePromises = querySnapshot.docs.map(document => 
+      updateDoc(doc(db, "tasks", document.id), { deletedAt: Timestamp.now() })
+    );
+    
+    await Promise.all(deletePromises);
+  }
+
+  async restoreCompanyTasks(companyName: string): Promise<void> {
+    const { getDocs, query, where, updateDoc } = await import("firebase/firestore");
+    const q = query(this.collectionRef, where("companyName", "==", companyName));
+    const querySnapshot = await getDocs(q);
+    
+    const restorePromises = querySnapshot.docs.map(document => 
+      updateDoc(doc(db, "tasks", document.id), { deletedAt: null })
+    );
+    
+    await Promise.all(restorePromises);
+  }
+
+  async permanentlyDeleteCompanyTasks(companyName: string): Promise<void> {
     const { getDocs, query, where, deleteDoc } = await import("firebase/firestore");
     const q = query(this.collectionRef, where("companyName", "==", companyName));
     const querySnapshot = await getDocs(q);

@@ -157,3 +157,71 @@ export function useDeleteCompanyTasks() {
     },
   });
 }
+
+export function useTrashTasks() {
+  return useQuery({
+    queryKey: ['/api/tasks/trash'],
+    queryFn: async () => {
+      const res = await fetch("/api/tasks/trash");
+      if (!res.ok) throw new Error("Failed to fetch trash tasks");
+      const data = await res.json();
+      return parseWithLogging<Task[]>(api.tasks.list.responses[200], data, "tasks.trash");
+    },
+  });
+}
+
+export function useRestoreCompanyTasks() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ companyName, secretCode }: { companyName: string, secretCode: string }) => {
+      const res = await fetch(`/api/companies/${encodeURIComponent(companyName)}/restore`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secretCode }),
+      });
+      
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error("Invalid secret code.");
+        }
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Restore company failed.");
+      }
+      
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.tasks.list.path] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks/trash'] });
+    },
+  });
+}
+
+export function usePermanentDeleteCompanyTasks() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ companyName, secretCode }: { companyName: string, secretCode: string }) => {
+      const res = await fetch(`/api/companies/${encodeURIComponent(companyName)}/permanent`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secretCode }),
+      });
+      
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error("Invalid secret code.");
+        }
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Delete company permanently failed.");
+      }
+      
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.tasks.list.path] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks/trash'] });
+    },
+  });
+}

@@ -590,9 +590,9 @@ export default function CompanyDetail() {
       </main>
 
       <Dialog open={!!editingTask} onOpenChange={(open) => !open && setEditingTask(null)}>
-        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-2xl border-0 shadow-2xl">
+        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-2xl border-0 shadow-2xl w-[95vw] sm:w-full">
           {!isAuthorized ? (
-            <div className="p-10 flex flex-col items-center justify-center space-y-6">
+            <div className="p-6 sm:p-10 flex flex-col items-center justify-center space-y-6">
               <div className="bg-primary/10 p-4 rounded-full">
                 <Lock className="w-10 h-10 text-primary" />
               </div>
@@ -645,7 +645,7 @@ export default function CompanyDetail() {
             </div>
           ) : (
             <>
-              <div className="bg-primary/10 px-8 py-6 border-b border-primary/10">
+              <div className="bg-primary/10 px-6 sm:px-8 py-5 sm:py-6 border-b border-primary/10">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-display flex items-center gap-2">
                     <History className="w-6 h-6 text-primary" />
@@ -657,7 +657,7 @@ export default function CompanyDetail() {
                 </DialogHeader>
               </div>
 
-              <div className="p-8">
+              <div className="p-4 sm:p-8">
                 <Form {...editForm}>
                   <form onSubmit={editForm.handleSubmit(onUpdate)} className="space-y-6">
                     {/* Read-only Information */}

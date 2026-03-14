@@ -175,14 +175,14 @@ export function CreateTaskModal() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="lg" className="font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 rounded-xl px-6">
+        <Button size="lg" className="font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 rounded-xl px-6 w-full sm:w-auto">
           <Plus className="w-5 h-5 mr-2" />
           Log Daily Work
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden border-0 shadow-2xl rounded-2xl max-h-[90vh] flex flex-col transition-all duration-300">
+      <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden border-0 shadow-2xl rounded-2xl max-h-[90vh] flex flex-col transition-all duration-300 w-[95vw] sm:w-full">
         {!isAuthorized ? (
-          <div className="p-8 flex flex-col items-center justify-center space-y-6">
+          <div className="p-6 sm:p-8 flex flex-col items-center justify-center space-y-6">
             <div className="bg-primary/10 p-4 rounded-full">
               <Lock className="w-8 h-8 text-primary" />
             </div>
@@ -215,7 +215,7 @@ export function CreateTaskModal() {
           </div>
         ) : (
           <>
-            <div className="bg-primary/10 px-6 py-6 border-b border-primary/10 flex-shrink-0">
+            <div className="bg-primary/10 px-5 sm:px-6 py-5 sm:py-6 border-b border-primary/10 flex-shrink-0">
               <DialogHeader>
                 <DialogTitle className="font-display text-2xl text-foreground flex items-center gap-2">
                   <Briefcase className="w-6 h-6 text-primary" />
@@ -227,7 +227,7 @@ export function CreateTaskModal() {
               </DialogHeader>
             </div>
 
-            <div className="p-6 overflow-y-auto custom-scrollbar">
+            <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   
@@ -441,7 +441,7 @@ export function CreateTaskModal() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 sticky bottom-0 bg-background/95 backdrop-blur-sm -mx-6 px-6 py-4 border-t border-border/10">
+                  <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 sticky bottom-0 bg-background/95 backdrop-blur-sm -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 border-t border-border/10">
                     <Button 
                       type="button" 
                       variant="outline" 
