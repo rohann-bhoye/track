@@ -38,7 +38,9 @@ import {
   Sun,
   Share2,
   Ghost,
-  ShieldAlert
+  ShieldAlert,
+  Sparkles,
+  Zap,
 } from "lucide-react";
 
 import { useTasks, useUpdateTask, useVerifyCode, useDeleteTask } from "@/hooks/use-tasks";
@@ -202,9 +204,33 @@ export default function CompanyDetail() {
         } as Task];
       }
     });
+
+    // Inject Today if missing and not Sunday (to make it easy to see where to log)
+    const today = new Date();
+    const todayStr = format(today, "yyyy-MM-dd");
+    if (!groups[todayStr] && !isSunday(today)) {
+      groups[todayStr] = [{
+        id: `today-${todayStr}`,
+        companyName: name,
+        taskDate: todayStr,
+        description: "No tasks logged for today yet",
+        status: "in_progress",
+        dateOfJoin: companyInfo?.dateOfJoin || "",
+        createdAt: today,
+        completedAt: null
+      } as any];
+    }
     
     return Object.entries(groups).sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());
   }, [companyTasks, groupedTasks, companyInfo, name]);
+
+  const latestNextWeekPlan = useMemo(() => {
+    // Find the newest task that has a nextWeekPlan
+    const planTask = [...companyTasks]
+      .sort((a, b) => new Date(b.taskDate).getTime() - new Date(a.taskDate).getTime())
+      .find(t => t.nextWeekPlan && t.nextWeekPlan.trim().length > 0);
+    return planTask;
+  }, [companyTasks]);
 
   const activeCompanyName = useMemo(() => 
     companyTasks.length > 0 ? companyTasks[0].companyName : null
@@ -439,7 +465,50 @@ export default function CompanyDetail() {
         </motion.div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        {/* Next Week Plan Banner */}
+        <AnimatePresence>
+          {latestNextWeekPlan && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-12 relative"
+            >
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
+              <div className="relative bg-card border border-primary/20 rounded-[2rem] p-6 sm:p-8 shadow-xl overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+                  <Zap className="w-32 h-32 text-primary" />
+                </div>
+                
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                  <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/10">
+                    <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+                  </div>
+                  
+                  <div className="space-y-2 flex-grow">
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-xl font-display font-black text-foreground tracking-tight">
+                        Next Week Strategy
+                      </h3>
+                      <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
+                        Planned {safeFormatDate(latestNextWeekPlan.taskDate, "MMM d")}
+                      </Badge>
+                    </div>
+                    <p className="text-lg text-muted-foreground leading-relaxed italic">
+                      "{latestNextWeekPlan.nextWeekPlan}"
+                    </p>
+                  </div>
+                  
+                  <div className="hidden lg:block shrink-0 px-6 py-3 bg-muted/50 rounded-2xl border border-border/50">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">Focus Target</p>
+                    <p className="text-sm font-bold text-foreground mt-1">Operational Excellence</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="space-y-12">
           {allDaysWithSundays.map(([date, tasks], groupIdx) => (
             <motion.section 

@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, isSunday, parseISO } from "date-fns";
-import { Lock, Briefcase, Calendar, FileText, Loader2, Plus, Trash2, CheckCircle2, Clock, ListTodo, Link as LinkIcon, Palmtree, CalendarX } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Lock, Briefcase, Calendar, FileText, Loader2, Plus, Trash2, CheckCircle2, Clock, ListTodo, Link as LinkIcon, Palmtree, CalendarX, Sparkles } from "lucide-react";
 
 import {
   Dialog,
@@ -33,6 +34,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateTask, useTasks, useVerifyCode } from "@/hooks/use-tasks";
 import { insertTaskSchema, type Task, createTasksBulkRequestSchema, type CreateTasksBulkRequest } from "@/shared/schema";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export function CreateTaskModal() {
@@ -49,7 +51,7 @@ export function CreateTaskModal() {
     defaultValues: {
       companyName: "",
       dateOfJoin: "",
-      taskDate: "",
+      taskDate: new Date().toISOString().split('T')[0],
       tasks: [
         { 
           description: "", 
@@ -175,9 +177,11 @@ export function CreateTaskModal() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="lg" className="font-semibold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 rounded-xl px-6 w-full sm:w-auto">
-          <Plus className="w-5 h-5 mr-2" />
-          Log Daily Work
+        <Button 
+          className="h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 transition-all duration-300 w-full px-4"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Work Log
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden border-0 shadow-2xl rounded-2xl max-h-[90vh] flex flex-col transition-all duration-300 w-[95vw] sm:w-full">
@@ -285,7 +289,7 @@ export function CreateTaskModal() {
                     />
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
                         <ListTodo className="w-4 h-4 text-primary" />
@@ -341,6 +345,8 @@ export function CreateTaskModal() {
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           )}
+
+                          {/* Removed per-task weekend logic as it's now top-level */}
 
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
                             <div className="md:col-span-2">

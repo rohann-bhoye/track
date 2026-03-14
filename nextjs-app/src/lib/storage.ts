@@ -92,6 +92,7 @@ export class FirebaseStorage implements IStorage {
   async createTask(insertTask: InsertTask): Promise<Task> {
     const taskData = {
       ...insertTask,
+      dateOfJoin: insertTask.dateOfJoin || "",
       createdAt: Timestamp.now(),
       completedAt: null,
     };

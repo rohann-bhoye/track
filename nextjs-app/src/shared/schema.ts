@@ -10,6 +10,7 @@ export const insertTaskSchema = z.object({
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
   proofLink: z.string().nullable().optional(),
+  nextWeekPlan: z.string().nullable().optional(),
 });
 
 // Full Task shape as stored in / returned from Firebase
@@ -27,6 +28,7 @@ export const taskSchema = z.object({
   completedAt: z.coerce.date().nullable(),
   originalDate: z.string().nullable().optional(),
   deletedAt: z.coerce.date().nullable().optional(),
+  nextWeekPlan: z.string().nullable().optional(),
 });
 
 export const createTasksBulkRequestSchema = z.object({
@@ -39,6 +41,7 @@ export const createTasksBulkRequestSchema = z.object({
     startDate: z.string().optional(),
     endDate: z.string().optional(),
     proofLink: z.string().optional(),
+    nextWeekPlan: z.string().optional(), // Store per task in DB
   })).min(1, "You didn't do any work? You must add at least one task! 🛌"),
   secretCode: z.string().min(1, "Hold up! We need the secret passkey to let you in 🛑"),
 });
@@ -49,6 +52,15 @@ export const verifyCodeSchema = z.object({
   secretCode: z.string().min(1, "Hold up! We need the secret passkey to let you in 🛑"),
 });
 
+export const updateNextWeekPlanSchema = z.object({
+  companyName: z.string().min(1, "Which company is this strategy for? 🏢"),
+  taskDate: z.string().min(1, "Pick a date for this strategy 📅"),
+  nextWeekPlan: z.string().min(1, "Don't leave the strategy blank! 🚀"),
+  secretCode: z.string().min(1, "Hold up! We need the secret passkey to let you in 🛑"),
+});
+
+export type UpdateNextWeekPlanRequest = z.infer<typeof updateNextWeekPlanSchema>;
+
 export const updateTaskStatusSchema = z.object({
   status: z.enum(["in_progress", "completed", "holiday", "leave"]).optional(),
   startDate: z.string().optional(),
@@ -56,6 +68,7 @@ export const updateTaskStatusSchema = z.object({
   taskDate: z.string().optional(),
   description: z.string().optional(),
   proofLink: z.string().optional(),
+  nextWeekPlan: z.string().optional(),
   originalDate: z.string().optional(),
   secretCode: z.string().min(1, "Hold up! We need the secret passkey to let you in 🛑"),
 });

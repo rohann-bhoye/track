@@ -37,7 +37,8 @@ export async function POST(req: Request) {
       status: t.status,
       startDate: t.startDate ?? null,
       endDate: t.endDate ?? null,
-      proofLink: t.proofLink ?? null
+      proofLink: t.proofLink ?? null,
+      nextWeekPlan: t.nextWeekPlan || data.nextWeekPlan || null
     }));
 
     const createdTasks = await storage.createTasks(insertTasks);

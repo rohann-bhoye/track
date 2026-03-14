@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useTasks } from "@/hooks/use-tasks";
 import { CompanyCard } from "@/components/CompanyCard";
 import { CreateTaskModal } from "@/components/CreateTaskModal";
+import { SetNextWeekPlanModal } from "@/components/SetNextWeekPlanModal";
 import { TrashModal } from "@/components/TrashModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -211,10 +212,6 @@ export default function Home() {
               </p>
             </div>
           </div>
-          
-          <div className="flex-shrink-0 pt-4 md:pt-0">
-            <CreateTaskModal />
-          </div>
         </motion.div>
       </header>
 
@@ -222,25 +219,38 @@ export default function Home() {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-24">
         
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-8 border-b border-border/50 mb-12 gap-6">
-          <div className="flex items-center gap-3">
-            <Building2 className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-display font-bold text-foreground">Active Companies</h2>
-            <Badge variant="outline" className="ml-2 font-mono font-bold bg-muted/30">
-              {companyEntries.length}
-            </Badge>
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between py-8 border-b border-border/50 mb-12 gap-8">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary/10 rounded-2xl">
+              <Building2 className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-display font-bold text-foreground">Active Companies</h2>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="outline" className="font-mono font-bold bg-muted/30">
+                  {companyEntries.length} Records
+                </Badge>
+              </div>
+            </div>
           </div>
           
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-            <TrashModal />
-            {hasTasks && (
-              <Link href="/report" className="w-full sm:w-auto">
-                <Button variant="outline" size="lg" className="h-11 rounded-xl font-bold w-full sm:w-auto">
-                  <BarChart3 className="w-5 h-5 mr-2" />
-                  Detailed Report
-                </Button>
-              </Link>
-            )}
+          <div className="w-full lg:w-auto">
+            <div className="grid grid-cols-2 lg:flex lg:flex-row gap-3 w-full items-center">
+              <TrashModal />
+              <SetNextWeekPlanModal />
+              <CreateTaskModal />
+              {hasTasks && (
+                <Link href="/report" className="w-full lg:w-auto">
+                  <Button 
+                    variant="outline" 
+                    className="h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest w-full px-4 border-border/60"
+                  >
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Reports
+                  </Button>
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 

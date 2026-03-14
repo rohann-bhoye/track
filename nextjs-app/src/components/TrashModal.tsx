@@ -84,9 +84,12 @@ export function TrashModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="lg" className="h-11 rounded-xl font-bold text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20 w-full sm:w-auto">
-          <Trash2 className="w-5 h-5 mr-2" />
-          Recycle Bin {companyEntries.length > 0 && `(${companyEntries.length})`}
+        <Button 
+          variant="outline" 
+          className="h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20 w-full px-4"
+        >
+          <Trash2 className="w-4 h-4 mr-2" />
+          Trash {companyEntries.length > 0 && `(${companyEntries.length})`}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] border-border/50 shadow-2xl rounded-2xl max-h-[85vh] flex flex-col w-[95vw] sm:w-full">

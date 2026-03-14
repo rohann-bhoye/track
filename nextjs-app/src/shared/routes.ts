@@ -15,6 +15,7 @@ const taskSchema = z.object({
   createdAt: z.coerce.date().nullable(),
   completedAt: z.coerce.date().nullable(),
   originalDate: z.string().nullable().optional(),
+  nextWeekPlan: z.string().nullable().optional(),
 });
 
 
