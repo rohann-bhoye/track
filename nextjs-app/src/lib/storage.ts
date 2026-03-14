@@ -9,6 +9,7 @@ export interface IStorage {
   createTasks(tasks: InsertTask[]): Promise<Task[]>;
   updateTask(id: any, updates: Partial<Task>): Promise<Task>;
   deleteTask(id: any): Promise<void>;
+  deleteCompanyTasks(companyName: string): Promise<void>;
 }
 
 export class FirebaseStorage implements IStorage {
@@ -110,6 +111,18 @@ export class FirebaseStorage implements IStorage {
     const { deleteDoc } = await import("firebase/firestore");
     const docRef = doc(db, "tasks", String(id));
     await deleteDoc(docRef);
+  }
+
+  async deleteCompanyTasks(companyName: string): Promise<void> {
+    const { getDocs, query, where, deleteDoc } = await import("firebase/firestore");
+    const q = query(this.collectionRef, where("companyName", "==", companyName));
+    const querySnapshot = await getDocs(q);
+    
+    const deletePromises = querySnapshot.docs.map(document => 
+      deleteDoc(doc(db, "tasks", document.id))
+    );
+    
+    await Promise.all(deletePromises);
   }
 }
 

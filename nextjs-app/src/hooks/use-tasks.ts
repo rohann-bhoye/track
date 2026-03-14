@@ -130,3 +130,30 @@ export function useDeleteTask() {
     },
   });
 }
+
+export function useDeleteCompanyTasks() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ companyName, secretCode }: { companyName: string, secretCode: string }) => {
+      const res = await fetch(`/api/companies/${encodeURIComponent(companyName)}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secretCode }),
+      });
+      
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error("Invalid secret code.");
+        }
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Delete company failed.");
+      }
+      
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.tasks.list.path] });
+    },
+  });
+}
