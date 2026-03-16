@@ -828,60 +828,6 @@ export default function CompanyDetail() {
                         )}
                       />
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={editForm.control}
-                          name="checkInTime"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-foreground/80 font-bold flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-blue-500" />
-                                Check-in
-                              </FormLabel>
-                              <FormControl>
-                                <Input type="time" className="rounded-2xl h-12 border-primary/20" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={editForm.control}
-                          name="checkOutTime"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-foreground/80 font-bold flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-rose-500" />
-                                Check-out
-                              </FormLabel>
-                              <FormControl>
-                                <Input type="time" className="rounded-2xl h-12 border-primary/20" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={editForm.control}
-                        name="dateOfJoin"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-foreground/80 font-bold flex items-center gap-2">
-                              <Calendar className="w-4 h-4 text-primary" />
-                              Joined Date (DOJ)
-                            </FormLabel>
-                            <FormControl>
-                              <Input type="date" className="rounded-2xl h-12 border-primary/20" {...field} />
-                            </FormControl>
-                            <FormDescription className="text-[10px]">
-                              Updating this will help fix "Joined N/A" issues across all records.
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                       
                       <FormField
                         control={editForm.control}

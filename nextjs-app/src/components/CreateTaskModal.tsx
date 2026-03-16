@@ -72,25 +72,6 @@ export function CreateTaskModal() {
 
   // DOJ Auto-fetch logic
   const companyName = form.watch("companyName");
-  useEffect(() => {
-    if (!companyName || !tasks) return;
-    
-    const existingTaskWithDOJ = tasks.find((t: Task) => 
-      t.companyName.toLowerCase() === companyName.toLowerCase() && 
-      t.dateOfJoin && t.dateOfJoin.trim() !== ""
-    );
-    if (existingTaskWithDOJ?.dateOfJoin) {
-      const currentDOJ = form.getValues("dateOfJoin");
-      if (currentDOJ !== existingTaskWithDOJ.dateOfJoin) {
-        form.setValue("dateOfJoin", existingTaskWithDOJ.dateOfJoin);
-        toast({
-          title: "DOJ Auto-fetched",
-          description: `Date of Join for ${existingTaskWithDOJ.companyName} has been populated.`,
-          duration: 2000,
-        });
-      }
-    }
-  }, [companyName, tasks, form, toast]);
 
   // Sunday detection logic
   const taskDate = form.watch("taskDate");
@@ -265,19 +246,6 @@ export function CreateTaskModal() {
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="dateOfJoin"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-foreground/80 font-medium">DOJ</FormLabel>
-                          <FormControl>
-                            <Input type="date" className="h-9 rounded-lg border-muted-foreground/20" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                     
                     <FormField
                       control={form.control}
