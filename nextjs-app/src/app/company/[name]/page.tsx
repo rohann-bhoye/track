@@ -828,7 +828,22 @@ export default function CompanyDetail() {
                         )}
                       />
 
-                      
+                      <FormField
+                        control={editForm.control}
+                        name="checkOutTime"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-foreground/80 font-bold flex items-center gap-2">
+                              <Clock className="w-4 h-4 text-rose-500" />
+                              Check-out Time
+                            </FormLabel>
+                            <FormControl>
+                              <Input type="time" className="rounded-2xl h-12 border-primary/20" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       <FormField
                         control={editForm.control}
                         name="taskDate"
