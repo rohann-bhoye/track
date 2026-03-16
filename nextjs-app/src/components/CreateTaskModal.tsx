@@ -70,8 +70,18 @@ export function CreateTaskModal() {
     name: "tasks",
   });
 
-  // DOJ Auto-fetch logic
+  // DOJ Auto-fetch logic — silently populate from existing records
   const companyName = form.watch("companyName");
+  useEffect(() => {
+    if (!companyName || !tasks) return;
+    const existingTaskWithDOJ = tasks.find((t: Task) =>
+      t.companyName.toLowerCase() === companyName.toLowerCase() &&
+      t.dateOfJoin && t.dateOfJoin.trim() !== ""
+    );
+    if (existingTaskWithDOJ?.dateOfJoin) {
+      form.setValue("dateOfJoin", existingTaskWithDOJ.dateOfJoin);
+    }
+  }, [companyName, tasks, form]);
 
   // Sunday detection logic
   const taskDate = form.watch("taskDate");

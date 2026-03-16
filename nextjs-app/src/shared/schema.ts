@@ -3,7 +3,7 @@ import { z } from "zod";
 // Pure Zod schema — no drizzle-orm dependency (app uses Firebase, not Postgres)
 export const insertTaskSchema = z.object({
   companyName: z.string().min(1),
-  dateOfJoin: z.string().min(1),
+  dateOfJoin: z.string().optional(),
   taskDate: z.string().min(1),
   description: z.string().min(1),
   status: z.string().default("in_progress"),
@@ -37,7 +37,7 @@ export const taskSchema = z.object({
 
 export const createTasksBulkRequestSchema = z.object({
   companyName: z.string().min(2, "Company name is too short! Even 'Apple' has 5 letters 🍎"),
-  dateOfJoin: z.string().min(1, "When did you join? We're not mind readers! 🧠"),
+  dateOfJoin: z.string().optional(),
   taskDate: z.string().min(1, "When did you do this? Time travel isn't supported yet ⏳"),
   tasks: z.array(z.object({
     description: z.string().min(10, "Come on, give us a bit more detail! (at least 10 chars) 📝"),
