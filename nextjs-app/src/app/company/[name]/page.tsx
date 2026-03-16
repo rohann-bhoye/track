@@ -304,7 +304,7 @@ export default function CompanyDetail() {
         checkOutTime: values.checkOutTime,
         dateOfJoin: values.dateOfJoin,
       },
-      secretCode: values.secretCode,
+      secretCode: values.secretCode || authCode,
     }, {
       onSuccess: () => {
         toast({ title: "Task Updated", description: "The task has been updated successfully." });
@@ -313,6 +313,16 @@ export default function CompanyDetail() {
       onError: (err: any) => {
         toast({ title: "Update Failed 💥", description: err.message || "Oops! The database blinked. Try again!", variant: "destructive" });
       }
+    });
+  };
+
+  const onInvalid = (errors: any) => {
+    console.error("Form Validation Errors:", errors);
+    const firstError = Object.values(errors)[0] as any;
+    toast({ 
+      title: "Check form fields!", 
+      description: firstError?.message || "Something in the form is incomplete.", 
+      variant: "destructive" 
     });
   };
 
@@ -714,10 +724,11 @@ export default function CompanyDetail() {
                       verifyCode.mutate(authCode, {
                         onSuccess: () => {
                           setIsAuthorized(true);
+                          editForm.setValue("secretCode", authCode);
                           toast({ title: "Unlocked", description: "Form is now editable." });
                         },
                         onError: (error: Error) => {
-                          toast({ title: "Access Denied 🛑", description: error.message || "Invalid code! Are you guessing randomly?", variant: "destructive" });
+                          toast({ title: "Access Denied 🛑", description: error.message || "Invalid code!", variant: "destructive" });
                           setAuthCode("");
                         }
                       });
@@ -733,14 +744,11 @@ export default function CompanyDetail() {
                     verifyCode.mutate(authCode, {
                       onSuccess: () => {
                         setIsAuthorized(true);
+                        editForm.setValue("secretCode", authCode);
                         toast({ title: "Unlocked", description: "Form is now editable." });
                       },
                       onError: (error: Error) => {
-                        toast({ 
-                          title: "Access Denied 🛑", 
-                          description: error.message || "Invalid code!", 
-                          variant: "destructive" 
-                        });
+                        toast({ title: "Access Denied 🛑", description: error.message || "Invalid code!", variant: "destructive" });
                         setAuthCode("");
                       }
                     });
@@ -771,7 +779,7 @@ export default function CompanyDetail() {
 
               <div className="p-4 sm:p-8 overflow-y-auto max-h-[70vh]">
                 <Form {...editForm}>
-                  <form onSubmit={editForm.handleSubmit(onUpdate)} className="space-y-6">
+                  <form onSubmit={editForm.handleSubmit(onUpdate, onInvalid)} className="space-y-6">
                     {/* Read-only Information */}
                     <div className="bg-muted/30 p-4 rounded-2xl border border-border/50 space-y-3">
                       <div className="flex justify-between items-center text-xs">
@@ -907,7 +915,6 @@ export default function CompanyDetail() {
                         type="submit" 
                         className="flex-[2] h-12 rounded-2xl font-black shadow-lg shadow-primary/20 hover:shadow-primary/30"
                         disabled={updateTask.isPending}
-                        onMouseEnter={() => editForm.setValue("secretCode", authCode)}
                       >
                         {updateTask.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save Changes"}
                       </Button>
