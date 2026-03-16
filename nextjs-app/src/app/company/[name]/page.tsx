@@ -68,6 +68,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -146,7 +147,14 @@ export default function CompanyDetail() {
     }).sort((a: Task, b: Task) => new Date(b.taskDate).getTime() - new Date(a.taskDate).getTime());
   }, [allTasks, name]);
 
-  const companyInfo = useMemo(() => companyTasks[0], [companyTasks]);
+  const companyInfo = useMemo(() => {
+    if (companyTasks.length === 0) return null;
+    const taskWithDOJ = companyTasks.find(t => t.dateOfJoin);
+    return {
+      ...companyTasks[0],
+      dateOfJoin: taskWithDOJ?.dateOfJoin || ""
+    };
+  }, [companyTasks]);
 
   const groupedTasks = useMemo(() => {
     const groups: Record<string, Task[]> = {};
@@ -255,6 +263,9 @@ export default function CompanyDetail() {
       taskDate: "",
       description: "",
       proofLink: "",
+      checkInTime: "",
+      checkOutTime: "",
+      dateOfJoin: "",
       secretCode: "",
     },
   });
@@ -267,7 +278,10 @@ export default function CompanyDetail() {
       endDate: task.endDate || "",
       taskDate: task.taskDate || "",
       description: task.description || "",
-      proofLink: (task as any).proofLink || "",
+      proofLink: task.proofLink || "",
+      checkInTime: task.checkInTime || "",
+      checkOutTime: task.checkOutTime || "",
+      dateOfJoin: task.dateOfJoin || "",
       secretCode: "",
     });
     setIsAuthorized(false);
@@ -286,6 +300,9 @@ export default function CompanyDetail() {
         taskDate: values.taskDate,
         description: values.description,
         proofLink: values.proofLink,
+        checkInTime: values.checkInTime,
+        checkOutTime: values.checkOutTime,
+        dateOfJoin: values.dateOfJoin,
       },
       secretCode: values.secretCode,
     }, {
@@ -588,11 +605,25 @@ export default function CompanyDetail() {
                                </Badge>
                              )}
 
+                             {task.checkInTime && (
+                               <Badge variant="outline" className="rounded-lg bg-blue-50/50 border-blue-200 px-2.5 py-1 text-blue-700 flex items-center gap-1.5 font-medium shadow-sm">
+                                 <Clock className="w-3.5 h-3.5" />
+                                 Check-in: {task.checkInTime}
+                               </Badge>
+                             )}
+
+                             {task.checkOutTime && (
+                               <Badge variant="outline" className="rounded-lg bg-rose-50/50 border-rose-200 px-2.5 py-1 text-rose-700 flex items-center gap-1.5 font-medium shadow-sm">
+                                 <Clock className="w-3.5 h-3.5" />
+                                 Check-out: {task.checkOutTime}
+                               </Badge>
+                             )}
+
                              {task.originalDate && (
                                <Badge variant="outline" className="rounded-lg bg-amber-50 border-amber-200 px-2.5 py-1 text-amber-700 flex items-center gap-1.5 font-bold shadow-sm">
                                  <History className="w-3.5 h-3.5" />
                                  Comes from: {safeFormatDate(task.originalDate, "MMM d")}
-                               </Badge>
+                                </Badge>
                              )}
                           </div>
 
@@ -738,7 +769,7 @@ export default function CompanyDetail() {
                 </DialogHeader>
               </div>
 
-              <div className="p-4 sm:p-8">
+              <div className="p-4 sm:p-8 overflow-y-auto max-h-[70vh]">
                 <Form {...editForm}>
                   <form onSubmit={editForm.handleSubmit(onUpdate)} className="space-y-6">
                     {/* Read-only Information */}
@@ -797,22 +828,86 @@ export default function CompanyDetail() {
                         )}
                       />
 
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={editForm.control}
+                          name="checkInTime"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-foreground/80 font-bold flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-blue-500" />
+                                Check-in
+                              </FormLabel>
+                              <FormControl>
+                                <Input type="time" className="rounded-2xl h-12 border-primary/20" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={editForm.control}
+                          name="checkOutTime"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-foreground/80 font-bold flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-rose-500" />
+                                Check-out
+                              </FormLabel>
+                              <FormControl>
+                                <Input type="time" className="rounded-2xl h-12 border-primary/20" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
                       <FormField
                         control={editForm.control}
-                        name="endDate"
+                        name="dateOfJoin"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-foreground/80 font-bold">End/Completion Date</FormLabel>
+                            <FormLabel className="text-foreground/80 font-bold flex items-center gap-2">
+                              <Calendar className="w-4 h-4 text-primary" />
+                              Joined Date (DOJ)
+                            </FormLabel>
                             <FormControl>
-                              <div className="relative group">
-                                <Input 
-                                  type="date" 
-                                  readOnly
-                                  {...field} 
-                                  className="rounded-2xl h-12 border-primary/20 pl-11 focus:ring-primary/20 bg-muted/50 cursor-not-allowed opacity-70" 
-                                />
-                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary opacity-50" />
-                              </div>
+                              <Input type="date" className="rounded-2xl h-12 border-primary/20" {...field} />
+                            </FormControl>
+                            <FormDescription className="text-[10px]">
+                              Updating this will help fix "Joined N/A" issues across all records.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={editForm.control}
+                        name="taskDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-foreground/80 font-bold">Reschedule Work Date</FormLabel>
+                            <FormControl>
+                              <Input type="date" className="rounded-2xl h-12 border-primary/20" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={editForm.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-foreground/80 font-bold">Update Description</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                className="min-h-[120px] rounded-2xl border-primary/20 focus:ring-primary/20 resize-none" 
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -824,16 +919,13 @@ export default function CompanyDetail() {
                         name="proofLink"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-foreground/80 font-bold">Proof Link (Optional)</FormLabel>
+                            <FormLabel className="text-foreground/80 font-bold">Proof of Work (Link)</FormLabel>
                             <FormControl>
-                              <div className="relative group">
-                                <Input 
-                                  placeholder="https://..." 
-                                  {...field} 
-                                  className="rounded-2xl h-12 border-primary/20 pl-11 focus:ring-primary/20" 
-                                />
-                                <ExternalLink className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary opacity-50" />
-                              </div>
+                              <Input 
+                                placeholder="Paste link here..." 
+                                className="rounded-2xl h-12 border-primary/20" 
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -841,31 +933,22 @@ export default function CompanyDetail() {
                       />
                     </div>
 
-                    {/* Secret code is still needed for the mutation as per existing server route logic */}
-                    <FormField
-                      control={editForm.control}
-                      name="secretCode"
-                      render={({ field }) => (
-                        <FormItem className="hidden">
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="flex gap-3 justify-end pt-4 border-t border-border/40">
-                      <Button type="button" variant="ghost" onClick={() => setEditingTask(null)} className="rounded-xl px-6">
-                        Cancel
+                    <div className="pt-4 flex gap-4">
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        onClick={() => setEditingTask(null)}
+                        className="flex-1 h-12 rounded-2xl font-bold"
+                      >
+                        Discard
                       </Button>
                       <Button 
                         type="submit" 
-                        disabled={updateTask.isPending} 
-                        className="rounded-2xl h-12 px-10 font-bold shadow-xl shadow-primary/20"
-                        onMouseEnter={() => editForm.setValue("secretCode", authCode)} // Pre-fill with verified code to match server schema
+                        className="flex-[2] h-12 rounded-2xl font-black shadow-lg shadow-primary/20 hover:shadow-primary/30"
+                        disabled={updateTask.isPending}
+                        onMouseEnter={() => editForm.setValue("secretCode", authCode)}
                       >
-                        {updateTask.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                        Apply Changes
+                        {updateTask.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save Changes"}
                       </Button>
                     </div>
                   </form>

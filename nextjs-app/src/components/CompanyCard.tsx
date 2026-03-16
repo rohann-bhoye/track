@@ -36,6 +36,7 @@ export function CompanyCard({ name, tasks, index }: CompanyCardProps) {
   const [secretCode, setSecretCode] = useState("");
 
   const latestTask = tasks[0];
+  const companyDOJ = tasks.find(t => t.dateOfJoin)?.dateOfJoin;
   const completedCount = tasks.filter(t => t.status === "completed").length;
   const progress = Math.round((completedCount / tasks.length) * 100);
 
@@ -122,7 +123,7 @@ export function CompanyCard({ name, tasks, index }: CompanyCardProps) {
             <div className="flex flex-wrap gap-3 mt-2 mb-8">
               <span className="flex items-center text-xs font-medium text-muted-foreground">
                 <Calendar className="w-3.5 h-3.5 mr-1.5" />
-                Joined {safeFormatDate(latestTask?.dateOfJoin, "MMM yyyy")}
+                Joined {safeFormatDate(companyDOJ, "MMM yyyy")}
               </span>
               <span className="flex items-center text-xs font-medium text-muted-foreground">
                 <LayoutList className="w-3.5 h-3.5 mr-1.5" />

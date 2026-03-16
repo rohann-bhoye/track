@@ -37,6 +37,8 @@ export async function POST(req: Request) {
       status: t.status,
       startDate: t.startDate ?? null,
       endDate: t.endDate ?? null,
+      checkInTime: t.checkInTime ?? null,
+      checkOutTime: t.checkOutTime ?? null,
       proofLink: t.proofLink ?? null,
       nextWeekPlan: t.nextWeekPlan || null
     }));

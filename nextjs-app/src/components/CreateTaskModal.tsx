@@ -57,6 +57,8 @@ export function CreateTaskModal() {
           description: "", 
           status: "in_progress", 
           proofLink: "",
+          checkInTime: "",
+          checkOutTime: "",
         }
       ],
       secretCode: "",
@@ -73,14 +75,17 @@ export function CreateTaskModal() {
   useEffect(() => {
     if (!companyName || !tasks) return;
     
-    const existingTask = tasks.find((t: Task) => t.companyName.toLowerCase() === companyName.toLowerCase());
-    if (existingTask?.dateOfJoin) {
+    const existingTaskWithDOJ = tasks.find((t: Task) => 
+      t.companyName.toLowerCase() === companyName.toLowerCase() && 
+      t.dateOfJoin && t.dateOfJoin.trim() !== ""
+    );
+    if (existingTaskWithDOJ?.dateOfJoin) {
       const currentDOJ = form.getValues("dateOfJoin");
-      if (currentDOJ !== existingTask.dateOfJoin) {
-        form.setValue("dateOfJoin", existingTask.dateOfJoin);
+      if (currentDOJ !== existingTaskWithDOJ.dateOfJoin) {
+        form.setValue("dateOfJoin", existingTaskWithDOJ.dateOfJoin);
         toast({
           title: "DOJ Auto-fetched",
-          description: `Date of Join for ${existingTask.companyName} has been populated.`,
+          description: `Date of Join for ${existingTaskWithDOJ.companyName} has been populated.`,
           duration: 2000,
         });
       }
@@ -301,7 +306,10 @@ export function CreateTaskModal() {
                         size="sm"
                         onClick={() => append({ 
                           description: "", 
-                          status: "in_progress"
+                          status: "in_progress",
+                          proofLink: "",
+                          checkInTime: "",
+                          checkOutTime: "",
                         })}
                         className="h-8 rounded-lg text-primary border-primary/20 hover:bg-primary/5"
                       >
@@ -441,6 +449,49 @@ export function CreateTaskModal() {
                                 )}
                               />
                             </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-border/40">
+                            <FormField
+                              control={form.control}
+                              name={`tasks.${index}.checkInTime`}
+                              render={({ field }) => (
+                                <FormItem className="space-y-1">
+                                  <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                    <Clock className="w-3 h-3 text-primary" />
+                                    Check-in (Optional)
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="time" 
+                                      className="h-8 rounded-lg border-muted-foreground/20 text-xs px-2" 
+                                      {...field} 
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name={`tasks.${index}.checkOutTime`}
+                              render={({ field }) => (
+                                <FormItem className="space-y-1">
+                                  <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                    <Clock className="w-3 h-3 text-rose-500" />
+                                    Check-out (Optional)
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      type="time" 
+                                      className="h-8 rounded-lg border-muted-foreground/20 text-xs px-2" 
+                                      {...field} 
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                           </div>
                         </div>
                       ))}

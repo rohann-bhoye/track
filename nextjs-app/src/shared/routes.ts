@@ -11,6 +11,8 @@ const taskSchema = z.object({
   status: z.string().nullable(),
   startDate: z.string().nullable(),
   endDate: z.string().nullable(),
+  checkInTime: z.string().nullable().optional(),
+  checkOutTime: z.string().nullable().optional(),
   proofLink: z.string().nullable().optional(),
   createdAt: z.coerce.date().nullable(),
   completedAt: z.coerce.date().nullable(),
