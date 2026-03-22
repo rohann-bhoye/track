@@ -6,7 +6,7 @@ export const insertTaskSchema = z.object({
   dateOfJoin: z.string().optional(),
   taskDate: z.string().min(1),
   description: z.string().optional(),
-  status: z.string().default("in_progress"),
+  status: z.string().default("in_list"),
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
   checkInTime: z.string().nullable().optional(),
@@ -44,7 +44,7 @@ export const createTasksBulkRequestSchema = z.object({
   taskDate: z.string().min(1, "When did you do this? Time travel isn't supported yet ⏳"),
   tasks: z.array(z.object({
     description: z.string().optional(),
-    status: z.enum(["in_progress", "review", "completed", "holiday", "leave"]).default("in_progress"),
+    status: z.enum(["in_list", "in_progress", "review", "completed", "holiday", "leave"]).default("in_list"),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
     checkInTime: z.string().optional(),
@@ -72,7 +72,7 @@ export const updateNextWeekPlanSchema = z.object({
 export type UpdateNextWeekPlanRequest = z.infer<typeof updateNextWeekPlanSchema>;
 
 export const updateTaskStatusSchema = z.object({
-  status: z.enum(["in_progress", "review", "completed", "holiday", "leave"]).optional(),
+  status: z.enum(["in_list", "in_progress", "review", "completed", "holiday", "leave"]).optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   checkInTime: z.string().optional(),
@@ -83,7 +83,7 @@ export const updateTaskStatusSchema = z.object({
   proofLink: z.string().optional(),
   nextWeekPlan: z.string().optional(),
   originalDate: z.string().optional(),
-  assignee: z.string().optional(),
+  assignee: z.string().nullable().optional(),
   comment: z.string().optional(),
   secretCode: z.string().min(1, "Hold up! We need the secret passkey to let you in 🛑"),
 });
@@ -103,6 +103,7 @@ export const memberSchema = z.object({
   id: z.string(),
   name: z.string().min(1, "Member name is required"),
   companyName: z.string().min(1, "Company name is required"),
+  gender: z.enum(["male", "female"]).optional(),
   createdAt: z.coerce.date().nullable().optional(),
 });
 

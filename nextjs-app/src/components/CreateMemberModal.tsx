@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 export function CreateMemberModal({ companyName = "Caves Studio" }: { companyName?: string }) {
   const [open, setOpen] = useState(false);
@@ -37,6 +39,7 @@ export function CreateMemberModal({ companyName = "Caves Studio" }: { companyNam
     defaultValues: {
       name: "",
       companyName,
+      gender: "male",
     },
   });
 
@@ -64,8 +67,7 @@ export function CreateMemberModal({ companyName = "Caves Studio" }: { companyNam
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button 
-          variant="outline"
-          className="rounded-xl font-bold uppercase text-[10px] tracking-widest border-primary/20 text-primary hover:bg-primary/5 h-12 px-6"
+          className="rounded-xl h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20"
         >
           <UserPlus className="w-4 h-4 mr-2" />
           Add Member
@@ -99,6 +101,41 @@ export function CreateMemberModal({ companyName = "Caves Studio" }: { companyNam
                         className="h-11 rounded-xl border-muted-foreground/20 focus:border-primary/50" 
                         {...field} 
                       />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel className="text-foreground/80 font-medium">Gender (for funny alerts 😉)</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex gap-4"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="male" />
+                          </FormControl>
+                          <FormLabel className="font-normal cursor-pointer">
+                            Male
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="female" />
+                          </FormControl>
+                          <FormLabel className="font-normal cursor-pointer">
+                            Female
+                          </FormLabel>
+                        </FormItem>
+                      </RadioGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

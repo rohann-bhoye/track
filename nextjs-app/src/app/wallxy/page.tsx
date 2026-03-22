@@ -217,12 +217,12 @@ export default function WallxyDashboard() {
                 Task List
               </h2>
               <div className="flex flex-wrap items-center justify-center gap-3 w-full sm:w-auto">
-                <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary text-[10px] md:text-sm px-3 md:px-4 py-1.5 rounded-xl font-mono">
+                <div className="h-12 flex items-center px-5 rounded-xl border border-primary/20 bg-primary/5 text-primary text-xs font-bold uppercase tracking-widest min-w-[100px] justify-center">
                   {unassigned.length} Tasks
-                </Badge>
+                </div>
                 <CreateMemberModal companyName="Wallxy" />
-                <Button onClick={() => setIsCreateModalOpen(true)} className="rounded-xl h-9 hover:bg-primary/90 text-primary-foreground shadow-sm">
-                  <Plus className="w-4 h-4 mr-1" /> New Task
+                <Button onClick={() => setIsCreateModalOpen(true)} className="rounded-xl h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">
+                  <Plus className="w-4 h-4 mr-2" /> New Task
                 </Button>
               </div>
             </div>
@@ -581,6 +581,7 @@ function TaskGrid({
                 task.status === "completed" ? "bg-green-500/10 text-green-700 dark:text-green-400" :
                 task.status === "review" ? "bg-blue-500/10 text-blue-700 dark:text-blue-400" :
                 task.status === "in_progress" ? "bg-amber-500/10 text-amber-700 dark:text-amber-400" :
+                task.status === "in_list" ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400" :
                 "bg-muted text-muted-foreground"
               )}>
                 {task.status?.replace('_', ' ')}
@@ -600,6 +601,8 @@ function TaskGrid({
 
 function TaskModal({ task, members, onClose }: { task: Task; members: string[]; onClose: () => void }) {
   const updateTask = useUpdateWallxyTask();
+  const { data: allTasks } = useWallxyTasks();
+  const { data: membersObj } = useTeamMembers("Wallxy");
   const { toast } = useToast();
   const [assignee, setAssignee] = useState(task.assignee || "");
   const [comment, setComment] = useState(task.comment || "");
@@ -607,6 +610,25 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
 
   const handleStartTask = () => {
     if (!assignee) return;
+
+    // Check task limit (max 2 active tasks)
+    const activeTasks = allTasks?.filter(t => t.assignee === assignee && t.status !== "completed") || [];
+    if (activeTasks.length >= 2) {
+      const member = membersObj?.find(m => m.name === assignee);
+      const isFemale = member?.gender === "female";
+      
+      const message = isFemale 
+        ? `Ag ${assignee}, pyle te ${activeTasks.length} task purn kar ani m ajun gheee ka ash karte chal kar bar!`
+        : `Aree ${assignee}, pyle te ${activeTasks.length} task purn kar ani m ajun gheee ka ash kart chal kar bar!`;
+      
+      toast({ 
+        title: "Rule is Rule! 🛑", 
+        description: message, 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     updateTask.mutate({ id: task.id, updates: { status: "in_progress", assignee } }, {
       onSuccess: () => {
         toast({ title: "Task Assigned!", description: "You are now working on this task." });
@@ -616,7 +638,11 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
   };
 
   const handleUpdateStatus = () => {
-    updateTask.mutate({ id: task.id, updates: { status, comment } }, {
+    const updates: any = { status, comment };
+    if (status === "in_list") {
+      updates.assignee = null;
+    }
+    updateTask.mutate({ id: task.id, updates }, {
       onSuccess: () => {
         toast({ title: "Task Updated", description: "Status saved successfully." });
         onClose();
@@ -668,6 +694,7 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
                   <Select value={status} onValueChange={setStatus}>
                     <SelectTrigger className="h-14 rounded-xl font-bold"><SelectValue placeholder="Status" /></SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="in_list">Move to List</SelectItem>
                       <SelectItem value="in_progress">In Progress</SelectItem>
                       <SelectItem value="review">Send for Review</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>

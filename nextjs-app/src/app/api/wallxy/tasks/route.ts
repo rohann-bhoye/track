@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       taskDate: new Date().toISOString().split('T')[0],
       description: body.description || "",
       proofLink: body.proofLink || "",
-      status: "in_progress", // default status
+      status: "in_list", // default status for unassigned tasks
       // these will be filled automatically by storage or left empty
       assignee: null,
       dateOfJoin: "",
