@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ClipboardList, Building2, Briefcase, SearchX, BarChart3, Lock } from "lucide-react";
+import { ClipboardList, Building2, Briefcase, SearchX, BarChart3, Lock, User } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 
@@ -78,6 +78,9 @@ export default function Home() {
     if (!tasks) return {};
     const groups: Record<string, Task[]> = {};
     tasks.forEach(task => {
+      // Exclude Wallxy data from the main dashboard, as it has its own dedicated board
+      if (task.companyName === "Wallxy") return;
+      
       if (!groups[task.companyName]) {
         groups[task.companyName] = [];
       }

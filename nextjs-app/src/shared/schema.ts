@@ -5,7 +5,7 @@ export const insertTaskSchema = z.object({
   companyName: z.string().min(1),
   dateOfJoin: z.string().optional(),
   taskDate: z.string().min(1),
-  description: z.string().min(1),
+  description: z.string().optional(),
   status: z.string().default("in_progress"),
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
@@ -13,26 +13,29 @@ export const insertTaskSchema = z.object({
   checkOutTime: z.string().nullable().optional(),
   proofLink: z.string().nullable().optional(),
   nextWeekPlan: z.string().nullable().optional(),
+  assignee: z.string().nullable().optional(),
 });
 
 // Full Task shape as stored in / returned from Firebase
 export const taskSchema = z.object({
   id: z.string(),
   companyName: z.string(),
-  dateOfJoin: z.string(),
+  dateOfJoin: z.string().optional(),
   taskDate: z.string(),
-  description: z.string(),
-  status: z.string().nullable(),
+  description: z.string().optional(),
+  status: z.string().nullable().optional(),
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
   checkInTime: z.string().nullable().optional(),
   checkOutTime: z.string().nullable().optional(),
   proofLink: z.string().nullable().optional(),
-  createdAt: z.coerce.date().nullable(),
-  completedAt: z.coerce.date().nullable(),
+  createdAt: z.coerce.date().nullable().optional(),
+  completedAt: z.coerce.date().nullable().optional(),
   originalDate: z.string().nullable().optional(),
   deletedAt: z.coerce.date().nullable().optional(),
   nextWeekPlan: z.string().nullable().optional(),
+  assignee: z.string().nullable().optional(),
+  comment: z.string().nullable().optional(),
 });
 
 export const createTasksBulkRequestSchema = z.object({
@@ -40,14 +43,15 @@ export const createTasksBulkRequestSchema = z.object({
   dateOfJoin: z.string().optional(),
   taskDate: z.string().min(1, "When did you do this? Time travel isn't supported yet ⏳"),
   tasks: z.array(z.object({
-    description: z.string().min(10, "Come on, give us a bit more detail! (at least 10 chars) 📝"),
-    status: z.enum(["in_progress", "completed", "holiday", "leave"]).default("in_progress"),
+    description: z.string().optional(),
+    status: z.enum(["in_progress", "review", "completed", "holiday", "leave"]).default("in_progress"),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
     checkInTime: z.string().optional(),
     checkOutTime: z.string().optional(),
     proofLink: z.string().optional(),
     nextWeekPlan: z.string().optional(), // Store per task in DB
+    assignee: z.string().optional(),
   })).min(1, "You didn't do any work? You must add at least one task! 🛌"),
   secretCode: z.string().min(1, "Hold up! We need the secret passkey to let you in 🛑"),
 });
@@ -68,7 +72,7 @@ export const updateNextWeekPlanSchema = z.object({
 export type UpdateNextWeekPlanRequest = z.infer<typeof updateNextWeekPlanSchema>;
 
 export const updateTaskStatusSchema = z.object({
-  status: z.enum(["in_progress", "completed", "holiday", "leave"]).optional(),
+  status: z.enum(["in_progress", "review", "completed", "holiday", "leave"]).optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   checkInTime: z.string().optional(),
@@ -79,6 +83,8 @@ export const updateTaskStatusSchema = z.object({
   proofLink: z.string().optional(),
   nextWeekPlan: z.string().optional(),
   originalDate: z.string().optional(),
+  assignee: z.string().optional(),
+  comment: z.string().optional(),
   secretCode: z.string().min(1, "Hold up! We need the secret passkey to let you in 🛑"),
 });
 
@@ -91,3 +97,17 @@ export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type UpdateTaskStatusRequest = z.infer<typeof updateTaskStatusSchema>;
 export type TaskResponse = Task;
 export type TasksListResponse = Task[];
+
+// Members (for team board)
+export const memberSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, "Member name is required"),
+  companyName: z.string().min(1, "Company name is required"),
+  createdAt: z.coerce.date().nullable().optional(),
+});
+
+export const insertMemberSchema = memberSchema.omit({ id: true, createdAt: true });
+
+export type Member = z.infer<typeof memberSchema>;
+export type InsertMember = z.infer<typeof insertMemberSchema>;
+

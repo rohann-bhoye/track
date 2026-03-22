@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { type Task, type CreateTasksBulkRequest, api, buildUrl } from "@/shared/routes";
+import { type Task, type Member, type InsertMember, type CreateTasksBulkRequest, api, buildUrl } from "@/shared/routes";
 
 function parseWithLogging<T>(schema: any, data: unknown, label: string): T {
   const result = schema.safeParse(data);
@@ -20,6 +20,133 @@ export function useTasks(companyName?: string) {
       if (!res.ok) throw new Error("Failed to fetch tasks");
       const data = await res.json();
       return parseWithLogging<Task[]>(api.tasks.list.responses[200], data, "tasks.list");
+    },
+  });
+}
+
+export function useCreateWallxyTask() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: { description: string, proofLink?: string }) => {
+      const res = await fetch("/api/wallxy/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to create Wallxy task");
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/wallxy/tasks'] });
+    },
+  });
+}
+
+export function useWallxyTasks() {
+  return useQuery({
+    queryKey: ['/api/wallxy/tasks'],
+    queryFn: async () => {
+      const res = await fetch("/api/wallxy/tasks");
+      if (!res.ok) throw new Error("Failed to fetch Wallxy tasks");
+      const data = await res.json();
+      return data as Task[];
+    },
+    refetchInterval: 5000,
+  });
+}
+
+export function useTeamMembers(companyName?: string) {
+  return useQuery({
+    queryKey: ['/api/team-members', companyName],
+    queryFn: async () => {
+      const url = companyName ? `/api/team-members?company=${encodeURIComponent(companyName)}` : "/api/team-members";
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch team members");
+      const data = await res.json();
+      return data as Member[];
+    },
+  });
+}
+
+export function useCreateTeamMember() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: InsertMember) => {
+      const res = await fetch("/api/team-members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      
+      if (!res.ok) throw new Error("Failed to create team member.");
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/team-members"] });
+    },
+  });
+}
+
+export function useDeleteTeamMember() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, secretCode }: { id: string, secretCode: string }) => {
+      const res = await fetch("/api/team-members", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, secretCode }),
+      });
+      
+      if (!res.ok) {
+        if (res.status === 401) throw new Error("Invalid secret code.");
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to delete member.");
+      }
+      
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/team-members'] });
+    },
+  });
+}
+
+export function useTeamTasks(companyName?: string) {
+  return useQuery({
+    queryKey: ['/api/team-tasks', companyName],
+    queryFn: async () => {
+      const url = companyName ? `/api/team-tasks?company=${encodeURIComponent(companyName)}` : "/api/team-tasks";
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch team tasks");
+      const data = await res.json();
+      return data as Task[];
+    },
+  });
+}
+
+export function useCreateTeamTask() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: CreateTasksBulkRequest) => {
+      const res = await fetch("/api/team-tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      
+      if (!res.ok) {
+        if (res.status === 401) throw new Error("Invalid secret code.");
+        throw new Error("Failed to create team task.");
+      }
+      
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/team-tasks'] });
     },
   });
 }
@@ -81,6 +208,55 @@ export function useUpdateTask() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.tasks.list.path] });
+    },
+  });
+}
+
+export function useUpdateWallxyTask() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string, updates: Partial<Task> }) => {
+      const res = await fetch(`/api/wallxy/tasks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Update failed.");
+      }
+      
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/wallxy/tasks'] });
+    },
+  });
+}
+
+export function useDeleteWallxyTask() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, secretCode }: { id: string, secretCode: string }) => {
+      const res = await fetch(`/api/wallxy/tasks/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secretCode }),
+      });
+      
+      if (!res.ok) {
+        if (res.status === 401) throw new Error("Invalid secret code.");
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to delete task.");
+      }
+      
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/wallxy/tasks'] });
     },
   });
 }
@@ -167,7 +343,7 @@ export function useDeleteCompanyTasks() {
         if (previousTrash) {
           queryClient.setQueryData<Task[]>(['/api/tasks/trash'], [
             ...previousTrash,
-            ...deletedTasks.map(t => ({ ...t, deletedAt: new Date().toISOString() }))
+            ...deletedTasks.map(t => ({ ...t, deletedAt: new Date() }))
           ]);
         }
       }

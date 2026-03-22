@@ -5,6 +5,8 @@ import { format, isSunday, parseISO } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, Briefcase, Calendar, FileText, Loader2, Plus, Trash2, CheckCircle2, Clock, ListTodo, Link as LinkIcon, Palmtree, CalendarX, Sparkles } from "lucide-react";
 
+import { ScreenshotUpload } from "./ScreenshotUpload";
+
 import {
   Dialog,
   DialogContent,
@@ -341,7 +343,7 @@ export function CreateTaskModal() {
                                 name={`tasks.${index}.description`}
                                 render={({ field }) => (
                                   <FormItem className="space-y-1">
-                                    <FormLabel className="text-xs font-medium text-muted-foreground">Work Description</FormLabel>
+                                    <FormLabel className="text-xs font-medium text-muted-foreground">Work Description (Optional)</FormLabel>
                                     <FormControl>
                                       <Textarea 
                                         placeholder="Briefly describe what you worked on..." 
@@ -360,16 +362,12 @@ export function CreateTaskModal() {
                                 name={`tasks.${index}.proofLink`}
                                 render={({ field }) => (
                                   <FormItem className="space-y-1">
-                                    <FormLabel className="text-xs font-medium text-muted-foreground">Proof Link (Optional)</FormLabel>
+                                    <FormLabel className="text-xs font-medium text-muted-foreground">Screenshot / Proof</FormLabel>
                                     <FormControl>
-                                      <div className="relative">
-                                        <Input 
-                                          placeholder="https://..." 
-                                          className="h-9 rounded-lg border-muted-foreground/20 pl-8 text-xs" 
-                                          {...field} 
-                                        />
-                                        <LinkIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                                      </div>
+                                      <ScreenshotUpload 
+                                        value={field.value || ""} 
+                                        onChange={field.onChange} 
+                                      />
                                     </FormControl>
                                     <FormMessage />
                                   </FormItem>

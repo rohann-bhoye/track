@@ -1,4 +1,4 @@
-import { type Task, type InsertTask } from "@/shared/schema";
+import { type Task, type InsertTask, type Member, type InsertMember } from "@/shared/schema";
 import { collection, getDocs, addDoc, updateDoc, doc, Timestamp, query, orderBy } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -12,10 +12,21 @@ export interface IStorage {
   deleteCompanyTasks(companyName: string): Promise<void>;
   restoreCompanyTasks(companyName: string): Promise<void>;
   permanentlyDeleteCompanyTasks(companyName: string): Promise<void>;
+  getMembers(companyName?: string): Promise<Member[]>;
+  createMember(member: InsertMember): Promise<Member>;
+  deleteMember(id: string): Promise<void>;
 }
 
 export class FirebaseStorage implements IStorage {
-  private collectionRef = collection(db, "tasks");
+  private collectionName: string;
+
+  constructor(collectionName: string = "tasks") {
+    this.collectionName = collectionName;
+  }
+
+  private get collectionRef() {
+    return collection(db, this.collectionName);
+  }
 
   // Helper to generate a stable but unguessable slug for a company
   getCompanySlug(name: string): string {
@@ -181,6 +192,46 @@ export class FirebaseStorage implements IStorage {
     
     await Promise.all(deletePromises);
   }
+
+  // --- Member Methods ---
+  async getMembers(companyName?: string): Promise<Member[]> {
+    try {
+      const memberCol = collection(db, "team_members");
+      const q = query(memberCol, orderBy("name", "asc"));
+      const snapshot = await getDocs(q);
+      
+      let members = snapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id,
+        createdAt: doc.data().createdAt?.toDate() || null,
+      } as Member));
+
+      if (companyName) {
+        members = members.filter(m => m.companyName === companyName);
+      }
+      return members;
+    } catch (e) {
+      console.error("Error fetching members:", e);
+      return [];
+    }
+  }
+
+  async createMember(insertMember: InsertMember): Promise<Member> {
+    const memberCol = collection(db, "team_members");
+    const data = {
+      ...insertMember,
+      createdAt: Timestamp.now(),
+    };
+    const docRef = await addDoc(memberCol, data);
+    return { ...data, id: docRef.id, createdAt: data.createdAt.toDate() } as Member;
+  }
+
+  async deleteMember(id: string): Promise<void> {
+    const { deleteDoc } = await import("firebase/firestore");
+    const docRef = doc(db, "team_members", id);
+    await deleteDoc(docRef);
+  }
 }
 
-export const storage = new FirebaseStorage();
+export const storage = new FirebaseStorage("tasks");
+export const teamStorage = new FirebaseStorage("team_tasks");

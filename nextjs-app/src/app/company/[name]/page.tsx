@@ -43,6 +43,8 @@ import {
   Zap,
 } from "lucide-react";
 
+import { ScreenshotUpload } from "@/components/ScreenshotUpload";
+
 import { useTasks, useUpdateTask, useVerifyCode, useDeleteTask } from "@/hooks/use-tasks";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -880,12 +882,11 @@ export default function CompanyDetail() {
                         name="proofLink"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-foreground/80 font-bold">Proof of Work (Link)</FormLabel>
+                            <FormLabel className="text-foreground/80 font-bold">Screenshot / Proof</FormLabel>
                             <FormControl>
-                              <Input 
-                                placeholder="Paste link here..." 
-                                className="rounded-2xl h-12 border-primary/20" 
-                                {...field} 
+                              <ScreenshotUpload 
+                                value={field.value || ""} 
+                                onChange={field.onChange} 
                               />
                             </FormControl>
                             <FormMessage />

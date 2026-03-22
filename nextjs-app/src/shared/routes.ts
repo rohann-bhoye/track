@@ -1,25 +1,5 @@
 import { z } from 'zod';
-import { createTasksBulkRequestSchema, updateTaskStatusSchema, verifyCodeSchema } from './schema';
-
-// Plain Zod shape for Task — avoids importing drizzle-orm (Node.js-only) into the client bundle
-const taskSchema = z.object({
-  id: z.string(),
-  companyName: z.string(),
-  dateOfJoin: z.string(),
-  taskDate: z.string(),
-  description: z.string(),
-  status: z.string().nullable(),
-  startDate: z.string().nullable(),
-  endDate: z.string().nullable(),
-  checkInTime: z.string().nullable().optional(),
-  checkOutTime: z.string().nullable().optional(),
-  proofLink: z.string().nullable().optional(),
-  createdAt: z.coerce.date().nullable(),
-  completedAt: z.coerce.date().nullable(),
-  originalDate: z.string().nullable().optional(),
-  nextWeekPlan: z.string().nullable().optional(),
-});
-
+import { taskSchema, memberSchema, createTasksBulkRequestSchema, updateTaskStatusSchema, verifyCodeSchema, insertMemberSchema } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -108,3 +88,6 @@ export type CreateTasksBulkRequest = z.infer<typeof api.tasks.create.input>;
 export type Task = z.infer<typeof api.tasks.create.responses[201]>[number];
 export type TaskResponse = z.infer<typeof api.tasks.create.responses[201]>;
 export type TasksListResponse = z.infer<typeof api.tasks.list.responses[200]>;
+export type Member = z.infer<typeof memberSchema>;
+export type InsertMember = z.infer<typeof insertMemberSchema>;
+

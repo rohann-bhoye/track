@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { storage } from '@/lib/storage';
+import { teamStorage } from '@/lib/storage';
 import { createTasksBulkRequestSchema } from '@/shared/schema';
 import { z } from 'zod';
 
@@ -7,12 +7,12 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const company = searchParams.get('company') || undefined;
-    console.log(`[API] Fetching tasks for company: ${company || "ALL"}`);
-    const allTasks = await storage.getTasks(company);
-    console.log(`[API] Found ${allTasks.length} tasks`);
+    console.log(`[Team API] Fetching tasks for company: ${company || "ALL"}`);
+    const allTasks = await teamStorage.getTasks(company);
+    console.log(`[Team API] Found ${allTasks.length} tasks`);
     return NextResponse.json(allTasks);
   } catch (error) {
-    console.error(`[API] Failed to fetch tasks:`, error);
+    console.error(`[Team API] Failed to fetch tasks:`, error);
     return NextResponse.json({ message: "Failed to fetch tasks" }, { status: 500 });
   }
 }
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     // Translate request back to InsertTask array
     const insertTasks = data.tasks.map(t => ({
       companyName: data.companyName,
-      dateOfJoin: data.dateOfJoin,
+      dateOfJoin: data.dateOfJoin || "",
       taskDate: data.taskDate,
       description: t.description,
       status: t.status,
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
       assignee: t.assignee || null
     }));
 
-    const createdTasks = await storage.createTasks(insertTasks);
+    const createdTasks = await teamStorage.createTasks(insertTasks);
     return NextResponse.json(createdTasks, { status: 201 });
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
         field: (err as any).errors[0]?.path.join('.'),
       }, { status: 400 });
     }
-    console.error("[POST /api/tasks] Unhandled error:", err);
+    console.error("[POST /api/team-tasks] Unhandled error:", err);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }
