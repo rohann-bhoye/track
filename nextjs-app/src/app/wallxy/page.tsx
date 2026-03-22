@@ -435,7 +435,7 @@ function DeleteTaskDialog({ task, onClose }: { task: Task, onClose: () => void }
     if (!code) return;
     deleteTask.mutate({ id: task.id, secretCode: code }, {
       onSuccess: () => {
-        toast({ title: "Task Removed", description: "The task has been deleted." });
+        toast({ title: "Task Removed 🔐", description: "Master Code Accepted. Evidence Deleted! 🕵️‍♂️" });
         onClose();
       },
       onError: (err: any) => {
@@ -631,7 +631,7 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
 
     updateTask.mutate({ id: task.id, updates: { status: "in_progress", assignee } }, {
       onSuccess: () => {
-        toast({ title: "Task Assigned!", description: "You are now working on this task." });
+        toast({ title: "Task Assigned!", description: `Swagat aahe ${assignee}! Aata kamala laga! 🦾🏎️` });
         onClose();
       }
     });
@@ -644,7 +644,10 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
     }
     updateTask.mutate({ id: task.id, updates }, {
       onSuccess: () => {
-        toast({ title: "Task Updated", description: "Status saved successfully." });
+        const isCompl = updates.status === "completed";
+        const title = isCompl ? "विषय हार्ड! 🔥" : "Task Updated";
+        const desc = isCompl ? `लय भारी ${task.assignee}! Ek Number Kaam! 👑` : "Status saved successfully.";
+        toast({ title, description: desc });
         onClose();
       }
     });

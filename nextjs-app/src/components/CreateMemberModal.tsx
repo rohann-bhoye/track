@@ -47,8 +47,8 @@ export function CreateMemberModal({ companyName = "Caves Studio" }: { companyNam
     createMember.mutate(data, {
       onSuccess: () => {
         toast({
-          title: "Member Added",
-          description: `${data.name} has been added to the team.`,
+          title: "Swagat aahe! 🤝",
+          description: `Swagat aahe ${data.name}! Aata board var aala aahes, tar kamala lag! 🦾🏎️`,
         });
         setOpen(false);
         form.reset();
