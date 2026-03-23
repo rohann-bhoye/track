@@ -708,7 +708,7 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
     setErrors({});
 
     // Check task limit (max 2 active tasks)
-    const activeTasks = allTasks?.filter(t => t.assignee === assignee && t.status !== "completed") || [];
+    const activeTasks = allTasks?.filter(t => t.assignee === assignee && t.status !== "completed" && t.status !== "review") || [];
     if (activeTasks.length >= 2) {
       const member = membersObj?.find(m => m.name === assignee);
       const isFemale = member?.gender === "female";

@@ -52,7 +52,8 @@ export function useWallxyTasks() {
       const data = await res.json();
       return data as Task[];
     },
-    refetchInterval: 5000,
+    refetchInterval: 30000,
+    refetchIntervalInBackground: false,
   });
 }
 
