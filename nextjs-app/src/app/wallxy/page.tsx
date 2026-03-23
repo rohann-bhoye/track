@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { format, parseISO } from "date-fns";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { ScreenshotUpload } from "@/components/ScreenshotUpload";
@@ -98,11 +99,18 @@ export default function WallxyDashboard() {
   const { unassigned, assigned, reviewTasks } = useMemo(() => {
     if (!tasks) return { unassigned: [], assigned: {} as Record<string, Task[]>, reviewTasks: [] };
     
-    const un = tasks.filter(t => !t.assignee && t.status !== "completed" && t.status !== "review");
-    const rev = tasks.filter(t => t.status === "review");
+    // Sort all tasks by createdAt ascending (oldest first)
+    const sortedTasks = [...tasks].sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return timeA - timeB;
+    });
+
+    const un = sortedTasks.filter(t => !t.assignee && t.status !== "completed" && t.status !== "review");
+    const rev = sortedTasks.filter(t => t.status === "review");
     
     const ass = members.reduce((acc, m) => {
-      acc[m] = tasks.filter(t => t.assignee === m);
+      acc[m] = sortedTasks.filter(t => t.assignee === m);
       return acc;
     }, {} as Record<string, Task[]>);
 
@@ -189,7 +197,7 @@ export default function WallxyDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="fixed bottom-8 right-8 z-[110] bg-card border border-border/50 rounded-2xl p-6 shadow-2xl flex items-center gap-6 min-w-[300px]"
+              className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-[110] bg-card border border-border/50 rounded-2xl p-4 sm:p-6 shadow-2xl flex items-center gap-4 sm:gap-6 min-w-[250px] sm:min-w-[300px]"
             >
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
               <div className="flex-1 space-y-1">
@@ -207,7 +215,7 @@ export default function WallxyDashboard() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="w-full max-w-2xl bg-card border border-border/50 shadow-sm rounded-[2.5rem] p-6 md:p-8 z-10 relative overflow-hidden"
+            className="w-full bg-card border border-border/50 shadow-sm rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-6 md:p-8 z-10 relative overflow-hidden"
           >
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 border-b border-border/50 pb-5">
               <h2 className="text-xl md:text-2xl font-bold font-display text-foreground flex items-center gap-3">
@@ -261,7 +269,7 @@ export default function WallxyDashboard() {
           
           <div className="h-10 md:h-16 lg:hidden" />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 w-full gap-6 z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-full gap-4 sm:gap-6 z-10">
             {members.map((member, i) => {
               const memberTasks = assigned[member] || [];
               const completedCount = memberTasks.filter(t => t.status === "completed").length;
@@ -271,7 +279,7 @@ export default function WallxyDashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 + (i * 0.1) }}
                   key={member}
-                  className="flex-1 min-w-[300px] max-w-[420px] w-full bg-card border border-border/50 hover:border-primary/30 transition-all duration-300 rounded-[2rem] p-6 shadow-sm group relative overflow-hidden"
+                  className="w-full bg-card border border-border/50 hover:border-primary/30 transition-all duration-300 rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 shadow-sm group relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-primary/5 to-transparent rounded-bl-[100px] opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="flex items-center justify-between mb-6 relative z-10">
@@ -484,6 +492,7 @@ function TaskGrid({
   tasks: Task[], onSelect: (t: Task) => void, compact?: boolean, emptyText: string, onDropFile?: (file: File) => void, onDeleteTask?: (t: Task) => void
 }) {
   const [isHoverDragging, setIsHoverDragging] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   if (tasks.length === 0) {
     return (
@@ -532,69 +541,146 @@ function TaskGrid({
     );
   }
 
+  // In compact (member) mode, show only first 3 tasks unless expanded
+  const visibleTasks = compact && !showAll ? tasks.slice(0, 3) : tasks;
+  const hasMore = compact && tasks.length > 3;
+
   return (
-    <div className={cn("grid gap-4", compact ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2")}>
-      <AnimatePresence mode="popLayout">
-        {tasks.map(task => (
-          <motion.div
-            layout
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            key={task.id}
-            onClick={() => onSelect(task)}
-            className="group p-5 bg-background border border-border/50 hover:border-primary/40 hover:bg-muted/30 hover:shadow-md rounded-[1.25rem] cursor-pointer transition-all active:scale-[0.98] flex flex-col justify-between min-h-[120px] shadow-sm overflow-hidden"
-          >
-            <div>
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <p className={cn(
-                  "text-[15px] font-medium leading-snug line-clamp-3",
-                  task.description ? "text-foreground" : "text-muted-foreground italic opacity-60"
-                )}>
-                  {task.description || "No description provided"}
-                </p>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {onDeleteTask && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteTask(task);
-                      }}
-                      className="w-8 h-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  )}
+    <div className="space-y-4">
+      <div className={cn("grid gap-4", compact ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4")}>
+        <AnimatePresence mode="popLayout">
+          {visibleTasks.map(task => {
+            const isCompleted = task.status === "completed";
+
+            // Completed tasks: simplified card (only image + text)
+            if (isCompleted) {
+              return (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  key={task.id}
+                  onClick={() => onSelect(task)}
+                  className="group p-4 bg-green-50/50 dark:bg-green-950/10 border border-green-200/50 dark:border-green-800/30 hover:border-green-400/60 rounded-xl cursor-pointer transition-all active:scale-[0.98] shadow-sm overflow-hidden"
+                >
                   {task.proofLink && (
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <ImageIcon className="w-4 h-4 text-primary" />
+                    <div className="relative w-full h-[60px] mb-2 rounded-lg overflow-hidden border border-green-200/40">
+                      <img 
+                        src={task.proofLink} 
+                        alt="Task Screenshot" 
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
                     </div>
                   )}
+                  <p className={cn(
+                    "text-[13px] font-medium leading-snug line-clamp-2",
+                    task.description ? "text-foreground/80" : "text-muted-foreground italic opacity-60"
+                  )}>
+                    {task.description || "No description provided"}
+                  </p>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-[9px] uppercase tracking-widest text-green-600 dark:text-green-400 font-bold flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Done
+                    </span>
+                    {task.createdAt && (
+                      <span className="text-[9px] text-muted-foreground/50 font-medium">
+                        {format(new Date(task.createdAt), "MMM d")}
+                      </span>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            }
+
+            // Active tasks: full card
+            return (
+              <motion.div
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                key={task.id}
+                onClick={() => onSelect(task)}
+                className="group p-5 bg-background border border-border/50 hover:border-primary/40 hover:bg-muted/30 hover:shadow-md rounded-[1.25rem] cursor-pointer transition-all active:scale-[0.98] flex flex-col justify-between min-h-[120px] shadow-sm overflow-hidden"
+              >
+                {task.proofLink && (
+                  <div className="relative w-full h-[80px] mb-3 rounded-lg overflow-hidden border border-border/40 group-hover:border-primary/20 transition-colors">
+                    <img 
+                      src={task.proofLink} 
+                      alt="Task Screenshot" 
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div>
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex-1">
+                      <p className={cn(
+                        "text-[15px] font-medium leading-snug line-clamp-3",
+                        task.description ? "text-foreground" : "text-muted-foreground italic opacity-60"
+                      )}>
+                        {task.description || "No description provided"}
+                      </p>
+                      {task.createdAt && (
+                        <p className="text-[10px] text-muted-foreground/60 font-medium mt-1.5 flex items-center gap-1">
+                          <ExternalLink className="w-2.5 h-2.5 opacity-40" />
+                          {format(new Date(task.createdAt), "MMM d, h:mm a")}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {onDeleteTask && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteTask(task);
+                          }}
+                          className="w-8 h-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="flex items-center justify-between mt-4">
-              <Badge variant="outline" className={cn(
-                "border-0 shadow-none text-[11px] font-bold px-2.5 py-1 tracking-wide uppercase",
-                task.status === "completed" ? "bg-green-500/10 text-green-700 dark:text-green-400" :
-                task.status === "review" ? "bg-blue-500/10 text-blue-700 dark:text-blue-400" :
-                task.status === "in_progress" ? "bg-amber-500/10 text-amber-700 dark:text-amber-400" :
-                task.status === "in_list" ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400" :
-                "bg-muted text-muted-foreground"
-              )}>
-                {task.status?.replace('_', ' ')}
-              </Badge>
-              {task.assignee && (
-                <span className="text-[11px] uppercase tracking-widest text-primary font-bold">
-                  {task.assignee}
-                </span>
-              )}
-            </div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
+                <div className="flex items-center justify-between mt-4">
+                  <Badge variant="outline" className={cn(
+                    "border-0 shadow-none text-[11px] font-bold px-2.5 py-1 tracking-wide uppercase",
+                    task.status === "review" ? "bg-blue-500/10 text-blue-700 dark:text-blue-400" :
+                    task.status === "in_progress" ? "bg-amber-500/10 text-amber-700 dark:text-amber-400" :
+                    task.status === "in_list" ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400" :
+                    "bg-muted text-muted-foreground"
+                  )}>
+                    {task.status?.replace('_', ' ')}
+                  </Badge>
+                  {task.assignee && (
+                    <span className="text-[11px] uppercase tracking-widest text-primary font-bold">
+                      {task.assignee}
+                    </span>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+      
+      {/* See More / See Less button for member columns */}
+      {hasMore && (
+        <Button
+          variant="ghost"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowAll(!showAll);
+          }}
+          className="w-full h-10 rounded-xl text-xs font-bold uppercase tracking-widest text-primary hover:bg-primary/5 border border-dashed border-primary/20"
+        >
+          {showAll ? `Show Less` : `See More (${tasks.length - 3} more)`}
+        </Button>
+      )}
     </div>
   );
 }
@@ -607,9 +693,19 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
   const [assignee, setAssignee] = useState(task.assignee || "");
   const [comment, setComment] = useState(task.comment || "");
   const [status, setStatus] = useState(task.status || "in_progress");
+  const [errors, setErrors] = useState<Record<string, boolean>>({});
 
   const handleStartTask = () => {
-    if (!assignee) return;
+    if (!assignee) {
+      setErrors({ assignee: true });
+      toast({ 
+        title: "Field Required! ⚠️", 
+        description: "Please select your name before claiming the task.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    setErrors({});
 
     // Check task limit (max 2 active tasks)
     const activeTasks = allTasks?.filter(t => t.assignee === assignee && t.status !== "completed") || [];
@@ -638,6 +734,17 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
   };
 
   const handleUpdateStatus = () => {
+    if (!status) {
+      setErrors({ status: true });
+      toast({ 
+        title: "Field Required! ⚠️", 
+        description: "Please select a status before saving.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    setErrors({});
+
     const updates: any = { status, comment };
     if (status === "in_list") {
       updates.assignee = null;
@@ -667,7 +774,11 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
         <div className="p-6 md:p-8 space-y-6">
           {task.proofLink && (
             <div className="relative w-full h-[250px] rounded-[1.5rem] overflow-hidden border border-border/50 group">
-              <Image src={task.proofLink} alt="Task Screenshot" fill className="object-contain" />
+              <img 
+                src={task.proofLink} 
+                alt="Task Screenshot" 
+                className="absolute inset-0 w-full h-full object-contain"
+              />
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <Button variant="secondary" onClick={() => window.open(task.proofLink!, '_blank')}>View Full Size</Button>
               </div>
@@ -685,24 +796,38 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
           ) : (
             <div className="space-y-4">
               {!isAssigned ? (
-                <div className="space-y-4">
-                  <Select value={assignee} onValueChange={setAssignee}>
-                    <SelectTrigger className="h-14 rounded-xl font-bold"><SelectValue placeholder="Who are you?" /></SelectTrigger>
-                    <SelectContent>{members.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-                  </Select>
+                <div className="space-y-3">
+                  <div>
+                    <Select value={assignee} onValueChange={(v) => { setAssignee(v); setErrors(prev => ({ ...prev, assignee: false })); }}>
+                      <SelectTrigger className={cn("h-14 rounded-xl font-bold", errors.assignee && "border-red-500 border-2 ring-2 ring-red-500/20")}>
+                        <SelectValue placeholder="Who are you?" />
+                      </SelectTrigger>
+                      <SelectContent>{members.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+                    </Select>
+                    {errors.assignee && (
+                      <p className="text-red-500 text-xs font-bold mt-1.5 ml-1">⚠ Please select your name</p>
+                    )}
+                  </div>
                   <Button onClick={handleStartTask} className="w-full h-14 rounded-xl font-bold text-lg">Claim Task</Button>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <Select value={status} onValueChange={setStatus}>
-                    <SelectTrigger className="h-14 rounded-xl font-bold"><SelectValue placeholder="Status" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="in_list">Move to List</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="review">Send for Review</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-3">
+                  <div>
+                    <Select value={status} onValueChange={(v) => { setStatus(v); setErrors(prev => ({ ...prev, status: false })); }}>
+                      <SelectTrigger className={cn("h-14 rounded-xl font-bold", errors.status && "border-red-500 border-2 ring-2 ring-red-500/20")}>
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="in_list">Move to List</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="review">Send for Review</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.status && (
+                      <p className="text-red-500 text-xs font-bold mt-1.5 ml-1">⚠ Please select a status</p>
+                    )}
+                  </div>
                   <Textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Notes..." className="rounded-xl h-24" />
                   <Button onClick={handleUpdateStatus} className="w-full h-14 rounded-xl font-bold text-lg">Save Changes</Button>
                 </div>
@@ -720,13 +845,28 @@ function CreateTaskModal({ onClose, initialProofLink = "" }: { onClose: () => vo
   const { toast } = useToast();
   const [description, setDescription] = useState("");
   const [proofLink, setProofLink] = useState(initialProofLink);
+  const [errors, setErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (initialProofLink) setProofLink(initialProofLink);
   }, [initialProofLink]);
 
   const handleSubmit = () => {
-    if (!description.trim() && !proofLink.trim()) return;
+    const newErrors: Record<string, boolean> = {};
+    
+    if (!description.trim() && !proofLink.trim()) {
+      newErrors.description = true;
+      newErrors.proofLink = true;
+      toast({ 
+        title: "Fields Required! ⚠️", 
+        description: "Please add a description or upload a screenshot.", 
+        variant: "destructive" 
+      });
+      setErrors(newErrors);
+      return;
+    }
+    setErrors({});
+
     createTask.mutate({ description, proofLink }, {
       onSuccess: () => {
         toast({ title: "Created!", description: "Task added to board" });
@@ -740,8 +880,23 @@ function CreateTaskModal({ onClose, initialProofLink = "" }: { onClose: () => vo
       <DialogContent className="sm:max-w-[500px] border border-border/50 bg-card rounded-[2rem]">
         <div className="p-6 border-b border-border/50"><DialogTitle className="text-xl font-bold">New Task</DialogTitle></div>
         <div className="p-6 space-y-6">
-          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description..." className="h-28 rounded-xl" />
-          <ScreenshotUpload value={proofLink} onChange={setProofLink} />
+          <div>
+            <Textarea 
+              value={description} 
+              onChange={(e) => { setDescription(e.target.value); setErrors(prev => ({ ...prev, description: false })); }} 
+              placeholder="Description..." 
+              className={cn("h-28 rounded-xl", errors.description && "border-red-500 border-2 ring-2 ring-red-500/20")} 
+            />
+            {errors.description && (
+              <p className="text-red-500 text-xs font-bold mt-1.5 ml-1">⚠ Add a description or screenshot</p>
+            )}
+          </div>
+          <div>
+            <ScreenshotUpload value={proofLink} onChange={(v) => { setProofLink(v); setErrors(prev => ({ ...prev, proofLink: false })); }} />
+            {errors.proofLink && !errors.description && (
+              <p className="text-red-500 text-xs font-bold mt-1.5 ml-1">⚠ Upload a screenshot or add description</p>
+            )}
+          </div>
           <Button onClick={handleSubmit} disabled={createTask.isPending} className="w-full h-12 rounded-xl font-bold">{createTask.isPending ? "Adding..." : "Add Task"}</Button>
         </div>
       </DialogContent>
