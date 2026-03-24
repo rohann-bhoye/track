@@ -14,7 +14,6 @@ export const insertTaskSchema = z.object({
   proofLink: z.string().nullable().optional(),
   nextWeekPlan: z.string().nullable().optional(),
   assignee: z.string().nullable().optional(),
-  priority: z.enum(["easy", "medium", "high"]).default("medium"),
 });
 
 // Full Task shape as stored in / returned from Firebase
@@ -37,7 +36,6 @@ export const taskSchema = z.object({
   nextWeekPlan: z.string().nullable().optional(),
   assignee: z.string().nullable().optional(),
   comment: z.string().nullable().optional(),
-  priority: z.enum(["easy", "medium", "high"]).default("medium"),
 });
 
 export const createTasksBulkRequestSchema = z.object({
@@ -54,7 +52,6 @@ export const createTasksBulkRequestSchema = z.object({
     proofLink: z.string().optional(),
     nextWeekPlan: z.string().optional(), // Store per task in DB
     assignee: z.string().optional(),
-    priority: z.enum(["easy", "medium", "high"]).default("medium"),
   })).min(1, "You didn't do any work? You must add at least one task! 🛌"),
   secretCode: z.string().min(1, "Hold up! We need the secret passkey to let you in 🛑"),
 });
@@ -88,7 +85,6 @@ export const updateTaskStatusSchema = z.object({
   originalDate: z.string().optional(),
   assignee: z.string().nullable().optional(),
   comment: z.string().optional(),
-  priority: z.enum(["easy", "medium", "high"]).optional(),
   secretCode: z.string().min(1, "Hold up! We need the secret passkey to let you in 🛑"),
 });
 

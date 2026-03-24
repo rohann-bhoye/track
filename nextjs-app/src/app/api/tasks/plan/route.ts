@@ -25,8 +25,7 @@ export async function POST(req: Request) {
       startDate: null,
       endDate: null,
       proofLink: null,
-      nextWeekPlan: data.nextWeekPlan,
-      priority: "medium"
+      nextWeekPlan: data.nextWeekPlan
     };
 
     const createdTask = await storage.createTask(planTask as any);
