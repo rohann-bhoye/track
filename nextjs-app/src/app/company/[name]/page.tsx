@@ -264,7 +264,7 @@ export default function CompanyDetail() {
       endDate: "",
       taskDate: "",
       description: "",
-      proofLink: "",
+      screenshotGroups: [] as any[],
       checkInTime: "",
       checkOutTime: "",
       dateOfJoin: "",
@@ -280,7 +280,7 @@ export default function CompanyDetail() {
       endDate: task.endDate || "",
       taskDate: task.taskDate || "",
       description: task.description || "",
-      proofLink: task.proofLink || "",
+      screenshotGroups: task.screenshotGroups || [],
       checkInTime: task.checkInTime || "",
       checkOutTime: task.checkOutTime || "",
       dateOfJoin: task.dateOfJoin || "",
@@ -301,7 +301,7 @@ export default function CompanyDetail() {
         endDate: values.endDate,
         taskDate: values.taskDate,
         description: values.description,
-        proofLink: values.proofLink,
+        screenshotGroups: values.screenshotGroups,
         checkInTime: values.checkInTime,
         checkOutTime: values.checkOutTime,
         dateOfJoin: values.dateOfJoin,
@@ -879,13 +879,13 @@ export default function CompanyDetail() {
 
                       <FormField
                         control={editForm.control}
-                        name="proofLink"
+                        name="screenshotGroups"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-foreground/80 font-bold">Screenshot / Proof</FormLabel>
                             <FormControl>
                               <ScreenshotUpload 
-                                value={field.value || ""} 
+                                value={field.value || []} 
                                 onChange={field.onChange} 
                               />
                             </FormControl>

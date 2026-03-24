@@ -54,7 +54,7 @@ export function CavesStudioTaskModal({ memberName }: { memberName?: string }) {
         { 
           description: "", 
           status: "in_progress", 
-          proofLink: "",
+          screenshotGroups: [],
           checkInTime: "",
           checkOutTime: "",
           assignee: memberName || "",
@@ -104,7 +104,7 @@ export function CavesStudioTaskModal({ memberName }: { memberName?: string }) {
         setOpen(false);
         form.reset({
           ...form.getValues(),
-          tasks: [{ description: "", status: "in_progress", proofLink: "", assignee: memberName || "" }],
+          tasks: [{ description: "", status: "in_progress", screenshotGroups: [], assignee: memberName || "" }],
           secretCode: "task123",
         });
       },
@@ -206,7 +206,7 @@ export function CavesStudioTaskModal({ memberName }: { memberName?: string }) {
                     onClick={() => append({ 
                       description: "", 
                       status: "in_progress",
-                      proofLink: "",
+                      screenshotGroups: [],
                       checkInTime: "",
                       checkOutTime: "",
                       assignee: memberName || "",
@@ -339,13 +339,13 @@ export function CavesStudioTaskModal({ memberName }: { memberName?: string }) {
                         <div className="md:col-span-12 mt-2">
                           <FormField
                             control={form.control}
-                            name={`tasks.${index}.proofLink`}
+                            name={`tasks.${index}.screenshotGroups`}
                             render={({ field }) => (
                               <FormItem className="space-y-1">
                                 <FormLabel className="text-xs font-medium text-muted-foreground">Screenshot / Proof</FormLabel>
                                 <FormControl>
                                   <ScreenshotUpload 
-                                    value={field.value || ""} 
+                                    value={field.value || []} 
                                     onChange={field.onChange} 
                                   />
                                 </FormControl>

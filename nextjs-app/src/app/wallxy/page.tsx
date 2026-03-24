@@ -116,24 +116,24 @@ export default function WallxyDashboard() {
 
   // Derived folders list for UI tabs
   const folders = useMemo(() => {
-    const list = boardFolders?.map(f => f.name) || [];
-    
-    // Also include folders that exist in tasks but not in explicit list (fallback)
-    tasks?.forEach(t => {
-      if (t.boardFolder && !list.includes(t.boardFolder)) {
-        list.push(t.boardFolder);
-      }
-    });
-    
-    return Array.from(new Set(list)).sort();
-  }, [boardFolders, tasks]);
+    return Array.from(new Set(boardFolders?.map(f => f.name) || [])).sort();
+  }, [boardFolders]);
+
+  const validFolderNames = useMemo(() => new Set(folders), [folders]);
+
+  const hasUncategorized = useMemo(() => {
+    if (!tasks) return false;
+    return tasks.some(t => !t.boardFolder || !validFolderNames.has(t.boardFolder));
+  }, [tasks, validFolderNames]);
 
   const filteredTasks = useMemo(() => {
     if (!tasks) return [];
     if (activeFolder === "All Work") return tasks;
-    if (activeFolder === "Uncategorized") return tasks.filter(t => !t.boardFolder);
+    if (activeFolder === "Uncategorized") {
+      return tasks.filter(t => !t.boardFolder || !validFolderNames.has(t.boardFolder));
+    }
     return tasks.filter(t => t.boardFolder === activeFolder);
-  }, [tasks, activeFolder]);
+  }, [tasks, activeFolder, validFolderNames]);
 
   const { unassigned, assigned, reviewTasks } = useMemo(() => {
     if (!filteredTasks) return { unassigned: [], assigned: {} as Record<string, Task[]>, reviewTasks: [] };
@@ -209,7 +209,7 @@ export default function WallxyDashboard() {
           >
             All Work
           </Button>
-          {tasks?.some(t => !t.boardFolder) && (
+          {hasUncategorized && (
             <Button 
               variant={activeFolder === "Uncategorized" ? "default" : "outline"} 
               onClick={() => setActiveFolder("Uncategorized")}
