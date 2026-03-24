@@ -44,7 +44,7 @@ export const createTasksBulkRequestSchema = z.object({
   taskDate: z.string().min(1, "When did you do this? Time travel isn't supported yet ⏳"),
   tasks: z.array(z.object({
     description: z.string().optional(),
-    status: z.enum(["in_list", "in_progress", "review", "completed", "holiday", "leave"]).default("in_list"),
+    status: z.enum(["in_list", "in_progress", "review", "completed", "holiday", "leave", "go_for_change", "dont_go"]).default("in_list"),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
     checkInTime: z.string().optional(),
@@ -72,7 +72,7 @@ export const updateNextWeekPlanSchema = z.object({
 export type UpdateNextWeekPlanRequest = z.infer<typeof updateNextWeekPlanSchema>;
 
 export const updateTaskStatusSchema = z.object({
-  status: z.enum(["in_list", "in_progress", "review", "completed", "holiday", "leave"]).optional(),
+  status: z.enum(["in_list", "in_progress", "review", "completed", "holiday", "leave", "go_for_change", "dont_go"]).optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   checkInTime: z.string().optional(),

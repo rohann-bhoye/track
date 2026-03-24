@@ -652,9 +652,13 @@ function TaskGrid({
                     task.status === "review" ? "bg-blue-500/10 text-blue-700 dark:text-blue-400" :
                     task.status === "in_progress" ? "bg-amber-500/10 text-amber-700 dark:text-amber-400" :
                     task.status === "in_list" ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400" :
+                    task.status === "go_for_change" ? "bg-orange-500/20 text-orange-700 dark:text-orange-400 border border-orange-400/30" :
+                    task.status === "dont_go" ? "bg-red-500/15 text-red-700 dark:text-red-400 border border-red-400/30" :
                     "bg-muted text-muted-foreground"
                   )}>
-                    {task.status?.replace('_', ' ')}
+                    {task.status === "go_for_change" ? "Go for Change" :
+                     task.status === "dont_go" ? "Don't Go" :
+                     task.status?.replace(/_/g, ' ')}
                   </Badge>
                   {task.assignee && (
                     <span className="text-[11px] uppercase tracking-widest text-primary font-bold">
@@ -748,12 +752,22 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
     const updates: any = { status, comment };
     if (status === "in_list") {
       updates.assignee = null;
+      // If Sir already marked this "Go for Change", preserve that status
+      // so it stays visible in the list with the orange badge
+      if (task.status === "go_for_change") {
+        updates.status = "go_for_change";
+      }
     }
     updateTask.mutate({ id: task.id, updates }, {
       onSuccess: () => {
         const isCompl = updates.status === "completed";
-        const title = isCompl ? "विषय हार्ड! 🔥" : "Task Updated";
-        const desc = isCompl ? `लय भारी ${task.assignee}! Ek Number Kaam! 👑` : "Status saved successfully.";
+        const isReturnedForChange = updates.status === "go_for_change" && !updates.assignee;
+        const title = isCompl ? "विषय हार्ड! 🔥" : isReturnedForChange ? "Back to List 🔄" : "Task Updated";
+        const desc = isCompl
+          ? `लय भारी ${task.assignee}! Ek Number Kaam! 👑`
+          : isReturnedForChange
+          ? "Task returned — Sir's 'Go for Change' flag is still active."
+          : "Status saved successfully.";
         toast({ title, description: desc });
         onClose();
       }
@@ -797,6 +811,25 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
             <div className="space-y-4">
               {!isAssigned ? (
                 <div className="space-y-3">
+                  {/* Sir's review buttons - only for in_list tasks */}
+                  {(task.status === "in_list" || task.status === "go_for_change" || task.status === "dont_go") && (
+                    <div className="flex gap-3 pb-1">
+                      <Button
+                        onClick={() => updateTask.mutate({ id: task.id, updates: { status: "go_for_change" } }, { onSuccess: () => { toast({ title: "Go for Change! 🔄", description: "Sir ne review kela — Change kara!" }); onClose(); } })}
+                        disabled={updateTask.isPending}
+                        className="flex-1 h-11 rounded-xl font-bold text-sm bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-md shadow-orange-500/20"
+                      >
+                        ✏️ Go for Change
+                      </Button>
+                      <Button
+                        onClick={() => updateTask.mutate({ id: task.id, updates: { status: "dont_go" } }, { onSuccess: () => { toast({ title: "Don't Go ❌", description: "Sir ne reject kela — Punarvichar kara!" }); onClose(); } })}
+                        disabled={updateTask.isPending}
+                        className="flex-1 h-11 rounded-xl font-bold text-sm bg-red-500 hover:bg-red-600 text-white border-0 shadow-md shadow-red-500/20"
+                      >
+                        🚫 Don't Go
+                      </Button>
+                    </div>
+                  )}
                   <div>
                     <Select value={assignee} onValueChange={(v) => { setAssignee(v); setErrors(prev => ({ ...prev, assignee: false })); }}>
                       <SelectTrigger className={cn("h-14 rounded-xl font-bold", errors.assignee && "border-red-500 border-2 ring-2 ring-red-500/20")}>
