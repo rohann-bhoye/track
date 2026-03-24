@@ -28,7 +28,7 @@ export function useCreateWallxyTask() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (data: { description: string, proofLink?: string }) => {
+    mutationFn: async (data: { description: string, proofLink?: string, priority?: string }) => {
       const res = await fetch("/api/wallxy/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

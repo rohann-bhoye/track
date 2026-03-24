@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Briefcase, CheckCircle2, Inbox, SearchX, Loader2, 
   Image as ImageIcon, ExternalLink, Plus, UserPlus,
-  UploadCloud, Sparkles, Eye, EyeOff, Zap, X, UserMinus, Trash2
+  UploadCloud, Sparkles, Eye, EyeOff, Zap, X, UserMinus, Trash2,
+  LayoutGrid, List as ListIcon, Filter, Calendar, Search, ArrowUpAz, ArrowDownAz
 } from "lucide-react";
 import { 
   useWallxyTasks, useUpdateWallxyTask, useTeamMembers, 
@@ -35,6 +36,10 @@ export default function WallxyDashboard() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [memberToDelete, setMemberToDelete] = useState<{id: string, name: string} | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [filterPriority, setFilterPriority] = useState<string>("all");
+  const [filterDate, setFilterDate] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
   const handleMagicUpload = async (file: File) => {
@@ -96,11 +101,41 @@ export default function WallxyDashboard() {
     return Array.from(list).sort();
   }, [membersObj, tasks]);
 
-  const { unassigned, assigned, reviewTasks } = useMemo(() => {
-    if (!tasks) return { unassigned: [], assigned: {} as Record<string, Task[]>, reviewTasks: [] };
+  const { unassigned, assigned, reviewTasks, stats } = useMemo(() => {
+    if (!tasks) return { unassigned: [], assigned: {} as Record<string, Task[]>, reviewTasks: [], stats: { total: 0, filtered: 0 } };
     
+    // Apply Filters
+    let filtered = [...tasks];
+    
+    if (filterPriority !== "all") {
+      filtered = filtered.filter(t => t.priority === filterPriority);
+    }
+    
+    if (filterDate !== "all") {
+      const today = new Date();
+      filtered = filtered.filter(t => {
+        if (!t.createdAt) return false;
+        const d = new Date(t.createdAt);
+        if (filterDate === "today") return format(d, "yyyy-MM-dd") === format(today, "yyyy-MM-dd");
+        if (filterDate === "week") {
+          const weekAgo = new Date();
+          weekAgo.setDate(today.getDate() - 7);
+          return d >= weekAgo;
+        }
+        return true;
+      });
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(t => 
+        t.description?.toLowerCase().includes(q) || 
+        t.assignee?.toLowerCase().includes(q)
+      );
+    }
+
     // Sort all tasks by createdAt ascending (oldest first)
-    const sortedTasks = [...tasks].sort((a, b) => {
+    const sortedTasks = filtered.sort((a, b) => {
       const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return timeA - timeB;
@@ -114,8 +149,13 @@ export default function WallxyDashboard() {
       return acc;
     }, {} as Record<string, Task[]>);
 
-    return { unassigned: un, assigned: ass, reviewTasks: rev };
-  }, [tasks, members]);
+    return { 
+      unassigned: un, 
+      assigned: ass, 
+      reviewTasks: rev,
+      stats: { total: tasks.length, filtered: sortedTasks.length }
+    };
+  }, [tasks, members, filterPriority, filterDate, searchQuery]);
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
@@ -226,7 +266,7 @@ export default function WallxyDashboard() {
               </h2>
               <div className="flex flex-wrap items-center justify-center gap-3 w-full sm:w-auto">
                 <div className="h-12 flex items-center px-5 rounded-xl border border-primary/20 bg-primary/5 text-primary text-xs font-bold uppercase tracking-widest min-w-[100px] justify-center">
-                  {unassigned.length} Tasks
+                  {stats.filtered} / {stats.total} Tasks
                 </div>
                 <CreateMemberModal companyName="Wallxy" />
                 <Button onClick={() => setIsCreateModalOpen(true)} className="rounded-xl h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">
@@ -234,11 +274,85 @@ export default function WallxyDashboard() {
                 </Button>
               </div>
             </div>
+
+            {/* Toolbar */}
+            <div className="flex flex-col md:flex-row gap-4 mb-8 items-center justify-between bg-muted/20 p-4 rounded-[1.5rem] border border-border/40">
+              <div className="relative w-full md:w-72 group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <Input 
+                  placeholder="Search tasks..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-12 h-11 rounded-xl border-muted-foreground/20 focus:border-primary/50 bg-background/50"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-center md:justify-end">
+                <div className="flex items-center gap-2 bg-background/50 border border-border/50 rounded-xl p-1 shadow-sm shrink-0">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setViewMode("grid")}
+                    className={cn("h-9 w-9 rounded-lg transition-all", viewMode === "grid" ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-muted")}
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setViewMode("list")}
+                    className={cn("h-9 w-9 rounded-lg transition-all", viewMode === "list" ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-muted")}
+                  >
+                    <ListIcon className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <Select value={filterPriority} onValueChange={setFilterPriority}>
+                  <SelectTrigger className="w-[130px] h-11 rounded-xl border-muted-foreground/20 bg-background/50">
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-3.5 h-3.5 opacity-60" />
+                      <SelectValue placeholder="Priority" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-border/50 shadow-xl">
+                    <SelectItem value="all">All Priorities</SelectItem>
+                    <SelectItem value="high">High Priority</SelectItem>
+                    <SelectItem value="medium">Medium Priority</SelectItem>
+                    <SelectItem value="easy">Easy Priority</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={filterDate} onValueChange={setFilterDate}>
+                  <SelectTrigger className="w-[140px] h-11 rounded-xl border-muted-foreground/20 bg-background/50">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 opacity-60" />
+                      <SelectValue placeholder="Date" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-border/50 shadow-xl">
+                    <SelectItem value="all">All Time</SelectItem>
+                    <SelectItem value="today">Today</SelectItem>
+                    <SelectItem value="week">Last 7 Days</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {(filterPriority !== "all" || filterDate !== "all" || searchQuery) && (
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => { setFilterPriority("all"); setFilterDate("all"); setSearchQuery(""); }}
+                    className="h-11 px-4 rounded-xl text-xs font-bold uppercase tracking-widest text-destructive hover:bg-destructive/10"
+                  >
+                    Reset
+                  </Button>
+                )}
+              </div>
+            </div>
             
             <TaskGrid 
               tasks={unassigned} 
               onSelect={setSelectedTask} 
-              emptyText="All tasks are assigned!" 
+              viewMode={viewMode}
+              emptyText={stats.total > 0 ? "No tasks match your filters!" : "All tasks are assigned!"} 
               onDropFile={handleMagicUpload}
               onDeleteTask={setTaskToDelete}
             />
@@ -316,6 +430,7 @@ export default function WallxyDashboard() {
                     tasks={memberTasks} 
                     onSelect={setSelectedTask} 
                     compact 
+                    viewMode={viewMode}
                     emptyText="No tasks assigned" 
                     onDropFile={handleMagicUpload} 
                     onDeleteTask={setTaskToDelete}
@@ -344,6 +459,7 @@ export default function WallxyDashboard() {
               <TaskGrid 
                 tasks={reviewTasks} 
                 onSelect={setSelectedTask} 
+                viewMode={viewMode}
                 emptyText="No tasks in review" 
                 onDropFile={handleMagicUpload} 
                 onDeleteTask={setTaskToDelete}
@@ -487,9 +603,9 @@ function DeleteTaskDialog({ task, onClose }: { task: Task, onClose: () => void }
 }
 
 function TaskGrid({ 
-  tasks, onSelect, compact = false, emptyText, onDropFile, onDeleteTask 
+  tasks, onSelect, compact = false, emptyText, onDropFile, onDeleteTask, viewMode = "grid"
 }: { 
-  tasks: Task[], onSelect: (t: Task) => void, compact?: boolean, emptyText: string, onDropFile?: (file: File) => void, onDeleteTask?: (t: Task) => void
+  tasks: Task[], onSelect: (t: Task) => void, compact?: boolean, emptyText: string, onDropFile?: (file: File) => void, onDeleteTask?: (t: Task) => void, viewMode?: "grid" | "list"
 }) {
   const [isHoverDragging, setIsHoverDragging] = useState(false);
   const [showAll, setShowAll] = useState(false);
@@ -547,13 +663,69 @@ function TaskGrid({
 
   return (
     <div className="space-y-4">
-      <div className={cn("grid gap-4", compact ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4")}>
-        <AnimatePresence mode="popLayout">
-          {visibleTasks.map(task => {
-            const isCompleted = task.status === "completed";
+      <AnimatePresence mode="wait">
+        {viewMode === "grid" ? (
+          <motion.div 
+            key="grid"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className={cn("grid gap-4", compact ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4")}
+          >
+            {visibleTasks.map(task => {
+              const isCompleted = task.status === "completed";
 
-            // Completed tasks: simplified card (only image + text)
-            if (isCompleted) {
+              // Completed tasks: simplified card
+              if (isCompleted) {
+                return (
+                  <motion.div
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    key={task.id}
+                    onClick={() => onSelect(task)}
+                    className="group p-4 bg-green-50/50 dark:bg-green-950/10 border border-green-200/50 dark:border-green-800/30 hover:border-green-400/60 rounded-xl cursor-pointer transition-all active:scale-[0.98] shadow-sm overflow-hidden"
+                  >
+                    {task.proofLink && (
+                      <div className="relative w-full h-[60px] mb-2 rounded-lg overflow-hidden border border-green-200/40">
+                        <img 
+                          src={task.proofLink} 
+                          alt="Task Screenshot" 
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <p className={cn(
+                      "text-[13px] font-medium leading-snug line-clamp-2",
+                      task.description ? "text-foreground/80" : "text-muted-foreground italic opacity-60"
+                    )}>
+                      {task.description || "No description provided"}
+                    </p>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-[9px] uppercase tracking-widest text-green-600 dark:text-green-400 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Done
+                      </span>
+                      {task.createdAt && (
+                        <span className="text-[9px] text-muted-foreground/50 font-medium">
+                          {format(new Date(task.createdAt), "MMM d")}
+                        </span>
+                      )}
+                      <Badge variant="outline" className={cn(
+                        "border-0 shadow-none text-[9px] font-black px-1.5 py-0.5 tracking-tighter uppercase rounded-md ml-2",
+                        task.priority === "high" ? "bg-red-500/10 text-red-600 dark:text-red-400" :
+                        task.priority === "easy" ? "bg-green-500/10 text-green-600 dark:text-green-400" :
+                        "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                      )}>
+                        {task.priority || "medium"}
+                      </Badge>
+                    </div>
+                  </motion.div>
+                );
+              }
+
+              // Active tasks: full card
               return (
                 <motion.div
                   layout
@@ -562,10 +734,10 @@ function TaskGrid({
                   exit={{ opacity: 0, scale: 0.95 }}
                   key={task.id}
                   onClick={() => onSelect(task)}
-                  className="group p-4 bg-green-50/50 dark:bg-green-950/10 border border-green-200/50 dark:border-green-800/30 hover:border-green-400/60 rounded-xl cursor-pointer transition-all active:scale-[0.98] shadow-sm overflow-hidden"
+                  className="group p-5 bg-background border border-border/50 hover:border-primary/40 hover:bg-muted/30 hover:shadow-md rounded-[1.25rem] cursor-pointer transition-all active:scale-[0.98] flex flex-col justify-between min-h-[120px] shadow-sm overflow-hidden"
                 >
                   {task.proofLink && (
-                    <div className="relative w-full h-[60px] mb-2 rounded-lg overflow-hidden border border-green-200/40">
+                    <div className="relative w-full h-[80px] mb-3 rounded-lg overflow-hidden border border-border/40 group-hover:border-primary/20 transition-colors">
                       <img 
                         src={task.proofLink} 
                         alt="Task Screenshot" 
@@ -573,100 +745,153 @@ function TaskGrid({
                       />
                     </div>
                   )}
-                  <p className={cn(
-                    "text-[13px] font-medium leading-snug line-clamp-2",
-                    task.description ? "text-foreground/80" : "text-muted-foreground italic opacity-60"
-                  )}>
-                    {task.description || "No description provided"}
-                  </p>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-[9px] uppercase tracking-widest text-green-600 dark:text-green-400 font-bold flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> Done
-                    </span>
-                    {task.createdAt && (
-                      <span className="text-[9px] text-muted-foreground/50 font-medium">
-                        {format(new Date(task.createdAt), "MMM d")}
-                      </span>
-                    )}
+                  <div>
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex-1">
+                        <p className={cn(
+                          "text-[15px] font-medium leading-snug line-clamp-3",
+                          task.description ? "text-foreground" : "text-muted-foreground italic opacity-60"
+                        )}>
+                          {task.description || "No description provided"}
+                        </p>
+                        {task.createdAt && (
+                          <p className="text-[10px] text-muted-foreground/60 font-medium mt-1.5 flex items-center gap-1">
+                            <ExternalLink className="w-2.5 h-2.5 opacity-40" />
+                            {format(new Date(task.createdAt), "MMM d, h:mm a")}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {onDeleteTask && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteTask(task);
+                            }}
+                            className="w-8 h-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-4">
+                    <Badge variant="outline" className={cn(
+                      "border-0 shadow-none text-[11px] font-bold px-2.5 py-1 tracking-wide uppercase",
+                      task.status === "review" ? "bg-blue-500/10 text-blue-700 dark:text-blue-400" :
+                      task.status === "in_progress" ? "bg-amber-500/10 text-amber-700 dark:text-amber-400" :
+                      task.status === "in_list" ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400" :
+                      "bg-muted text-muted-foreground"
+                    )}>
+                      {task.status?.replace('_', ' ')}
+                    </Badge>
+                    <div className="flex items-center gap-2">
+                      {task.assignee && (
+                        <span className="text-[11px] uppercase tracking-widest text-primary font-bold">
+                          {task.assignee}
+                        </span>
+                      )}
+                      <Badge variant="outline" className={cn(
+                        "border-0 shadow-none text-[10px] font-black px-2 py-0.5 tracking-tighter uppercase rounded-md",
+                        (task.priority === "high") ? "bg-red-500/10 text-red-600 dark:text-red-400" :
+                        (task.priority === "easy") ? "bg-green-500/10 text-green-600 dark:text-green-400" :
+                        "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                      )}>
+                        {task.priority || "medium"}
+                      </Badge>
+                    </div>
                   </div>
                 </motion.div>
               );
-            }
-
-            // Active tasks: full card
-            return (
-              <motion.div
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                key={task.id}
-                onClick={() => onSelect(task)}
-                className="group p-5 bg-background border border-border/50 hover:border-primary/40 hover:bg-muted/30 hover:shadow-md rounded-[1.25rem] cursor-pointer transition-all active:scale-[0.98] flex flex-col justify-between min-h-[120px] shadow-sm overflow-hidden"
-              >
-                {task.proofLink && (
-                  <div className="relative w-full h-[80px] mb-3 rounded-lg overflow-hidden border border-border/40 group-hover:border-primary/20 transition-colors">
-                    <img 
-                      src={task.proofLink} 
-                      alt="Task Screenshot" 
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                <div>
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="flex-1">
-                      <p className={cn(
-                        "text-[15px] font-medium leading-snug line-clamp-3",
-                        task.description ? "text-foreground" : "text-muted-foreground italic opacity-60"
-                      )}>
-                        {task.description || "No description provided"}
-                      </p>
-                      {task.createdAt && (
-                        <p className="text-[10px] text-muted-foreground/60 font-medium mt-1.5 flex items-center gap-1">
-                          <ExternalLink className="w-2.5 h-2.5 opacity-40" />
-                          {format(new Date(task.createdAt), "MMM d, h:mm a")}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {onDeleteTask && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteTask(task);
-                          }}
-                          className="w-8 h-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-4">
-                  <Badge variant="outline" className={cn(
-                    "border-0 shadow-none text-[11px] font-bold px-2.5 py-1 tracking-wide uppercase",
-                    task.status === "review" ? "bg-blue-500/10 text-blue-700 dark:text-blue-400" :
-                    task.status === "in_progress" ? "bg-amber-500/10 text-amber-700 dark:text-amber-400" :
-                    task.status === "in_list" ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400" :
-                    "bg-muted text-muted-foreground"
-                  )}>
-                    {task.status?.replace('_', ' ')}
-                  </Badge>
-                  {task.assignee && (
-                    <span className="text-[11px] uppercase tracking-widest text-primary font-bold">
-                      {task.assignee}
-                    </span>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </div>
+            })}
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="list"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden rounded-[1.5rem] border border-border/50 bg-card/50 shadow-sm"
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-muted/30 border-b border-border/50">
+                    <th className="p-4 text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground">Task</th>
+                    <th className="p-4 text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground text-center">Priority</th>
+                    <th className="p-4 text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground text-center">Status</th>
+                    <th className="p-4 text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground text-center">Assignee</th>
+                    <th className="p-4 text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground text-right hidden sm:table-cell">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/30">
+                  {visibleTasks.map(task => (
+                    <tr 
+                      key={task.id} 
+                      onClick={() => onSelect(task)}
+                      className="group hover:bg-muted/30 transition-colors cursor-pointer"
+                    >
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          {task.proofLink && (
+                            <div className="w-10 h-10 rounded-lg overflow-hidden border border-border/40 flex-shrink-0">
+                              <img src={task.proofLink} className="w-full h-full object-cover" alt="" />
+                            </div>
+                          )}
+                          <p className="text-sm font-medium text-foreground line-clamp-1 max-w-[120px] sm:max-w-[300px]">
+                            {task.description || "No description"}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="p-4 text-center">
+                        <Badge variant="outline" className={cn(
+                          "border-0 shadow-none text-[9px] font-black px-2 py-0.5 tracking-tighter uppercase rounded-md",
+                          (task.priority === "high") ? "bg-red-500/10 text-red-600 dark:text-red-400" :
+                          (task.priority === "easy") ? "bg-green-500/10 text-green-600 dark:text-green-400" :
+                          "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                        )}>
+                          {task.priority || "medium"}
+                        </Badge>
+                      </td>
+                      <td className="p-4 text-center">
+                        <Badge variant="outline" className={cn(
+                          "border-0 shadow-none text-[9px] font-bold px-2 py-0.5 tracking-wide uppercase",
+                          task.status === "review" ? "bg-blue-500/10 text-blue-700 dark:text-blue-400" :
+                          task.status === "in_progress" ? "bg-amber-500/10 text-amber-700 dark:text-amber-400" :
+                          task.status === "in_list" ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400" :
+                          task.status === "completed" ? "bg-green-500/10 text-green-700 dark:text-green-500" :
+                          "bg-muted text-muted-foreground"
+                        )}>
+                          {task.status?.replace('_', ' ')}
+                        </Badge>
+                      </td>
+                      <td className="p-4 text-center">
+                        <span className="text-[11px] font-bold text-primary truncate max-w-[60px] sm:max-w-[100px] inline-block">
+                          {task.assignee || "-"}
+                        </span>
+                      </td>
+                      <td className="p-4 text-right hidden sm:table-cell">
+                        <div className="flex flex-col items-end">
+                          <span className="text-[11px] font-medium text-muted-foreground">
+                            {task.createdAt ? format(new Date(task.createdAt), "MMM d") : "-"}
+                          </span>
+                          <span className="text-[9px] text-muted-foreground/50">
+                            {task.createdAt ? format(new Date(task.createdAt), "h:mm a") : ""}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* See More / See Less button for member columns */}
       {hasMore && (
@@ -693,6 +918,7 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
   const [assignee, setAssignee] = useState(task.assignee || "");
   const [comment, setComment] = useState(task.comment || "");
   const [status, setStatus] = useState(task.status || "in_progress");
+  const [priority, setPriority] = useState(task.priority || "medium");
   const [errors, setErrors] = useState<Record<string, boolean>>({});
 
   const handleStartTask = () => {
@@ -749,6 +975,7 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
     if (status === "in_list") {
       updates.assignee = null;
     }
+    updates.priority = priority;
     updateTask.mutate({ id: task.id, updates }, {
       onSuccess: () => {
         const isCompl = updates.status === "completed";
@@ -828,6 +1055,29 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
                       <p className="text-red-500 text-xs font-bold mt-1.5 ml-1">⚠ Please select a status</p>
                     )}
                   </div>
+                  <div>
+                    <label className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground ml-1 mb-2 block">Priority Level</label>
+                    <div className="flex gap-2">
+                      {["easy", "medium", "high"].map((p) => (
+                        <Button
+                          key={p}
+                          type="button"
+                          variant="outline"
+                          onClick={() => setPriority(p as any)}
+                          className={cn(
+                            "flex-1 h-10 rounded-xl text-[10px] uppercase font-bold tracking-widest border-2 transition-all",
+                            priority === p ? (
+                              p === "high" ? "bg-red-500/10 border-red-500 text-red-600 shadow-sm scale-[1.02]" :
+                              p === "medium" ? "bg-amber-500/10 border-amber-500 text-amber-600 shadow-sm scale-[1.02]" :
+                              "bg-green-500/10 border-green-500 text-green-600 shadow-sm scale-[1.02]"
+                            ) : "border-border/50 hover:bg-muted opacity-60"
+                          )}
+                        >
+                          {p}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                   <Textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Notes..." className="rounded-xl h-24" />
                   <Button onClick={handleUpdateStatus} className="w-full h-14 rounded-xl font-bold text-lg">Save Changes</Button>
                 </div>
@@ -844,6 +1094,7 @@ function CreateTaskModal({ onClose, initialProofLink = "" }: { onClose: () => vo
   const createTask = useCreateWallxyTask();
   const { toast } = useToast();
   const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState<"easy" | "medium" | "high">("medium");
   const [proofLink, setProofLink] = useState(initialProofLink);
   const [errors, setErrors] = useState<Record<string, boolean>>({});
 
@@ -866,8 +1117,8 @@ function CreateTaskModal({ onClose, initialProofLink = "" }: { onClose: () => vo
       return;
     }
     setErrors({});
-
-    createTask.mutate({ description, proofLink }, {
+  
+    createTask.mutate({ description, proofLink, priority }, {
       onSuccess: () => {
         toast({ title: "Created!", description: "Task added to board" });
         onClose();
@@ -896,6 +1147,29 @@ function CreateTaskModal({ onClose, initialProofLink = "" }: { onClose: () => vo
             {errors.proofLink && !errors.description && (
               <p className="text-red-500 text-xs font-bold mt-1.5 ml-1">⚠ Upload a screenshot or add description</p>
             )}
+          </div>
+          <div>
+            <label className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground ml-1 mb-2 block">Priority Level</label>
+            <div className="flex gap-2">
+              {["easy", "medium", "high"].map((p) => (
+                <Button
+                  key={p}
+                  type="button"
+                  variant="outline"
+                  onClick={() => setPriority(p as any)}
+                  className={cn(
+                    "flex-1 h-10 rounded-xl text-[10px] uppercase font-bold tracking-widest border-2 transition-all",
+                    priority === p ? (
+                      p === "high" ? "bg-red-500/10 border-red-500 text-red-600 shadow-sm scale-[1.02]" :
+                      p === "medium" ? "bg-amber-500/10 border-amber-500 text-amber-600 shadow-sm scale-[1.02]" :
+                      "bg-green-500/10 border-green-500 text-green-600 shadow-sm scale-[1.02]"
+                    ) : "border-border/50 hover:bg-muted opacity-60"
+                  )}
+                >
+                  {p}
+                </Button>
+              ))}
+            </div>
           </div>
           <Button onClick={handleSubmit} disabled={createTask.isPending} className="w-full h-12 rounded-xl font-bold">{createTask.isPending ? "Adding..." : "Add Task"}</Button>
         </div>
