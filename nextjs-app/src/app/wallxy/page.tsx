@@ -184,7 +184,7 @@ export default function WallxyDashboard() {
       <div className="fixed top-0 left-0 w-full h-[400px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none -z-10" />
       <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[120px] pointer-events-none -z-10" />
 
-      <header className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full text-center relative z-10">
+      <header className="pt-20 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full text-center relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -208,7 +208,7 @@ export default function WallxyDashboard() {
           e.stopPropagation();
           setIsDraggingBoard(true);
         }}
-        className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10"
+        className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10"
       >
         <AnimatePresence>
           {isDraggingBoard && (
