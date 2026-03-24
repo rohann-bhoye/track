@@ -5,13 +5,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Briefcase, CheckCircle2, Inbox, SearchX, Loader2, 
   Image as ImageIcon, ExternalLink, Plus, UserPlus,
-  UploadCloud, Sparkles, Eye, EyeOff, Zap, X, UserMinus, Trash2
+  UploadCloud, Sparkles, Eye, EyeOff, Zap, X, UserMinus, Trash2, FolderOpen, Folder
 } from "lucide-react";
 import { 
   useWallxyTasks, useUpdateWallxyTask, useTeamMembers, 
-  useCreateWallxyTask, useDeleteTeamMember, useDeleteWallxyTask
+  useCreateWallxyTask, useDeleteTeamMember, useDeleteWallxyTask,
+  useBoardFolders, useCreateBoardFolder, useDeleteBoardFolder
 } from "@/hooks/use-tasks";
-import { type Task } from "@/shared/schema";
+import { type Task, type BoardFolder } from "@/shared/schema";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,25 +22,34 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO } from "date-fns";
 import Image from "next/image";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ScreenshotUpload } from "@/components/ScreenshotUpload";
 import { CreateMemberModal } from "@/components/CreateMemberModal";
 
 export default function WallxyDashboard() {
-  const { data: tasks, isLoading, isError } = useWallxyTasks();
+  const { data: tasks, isLoading: tasksLoading, isError } = useWallxyTasks();
   const { data: membersObj } = useTeamMembers("Wallxy");
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const { data: boardFolders } = useBoardFolders();
   const [isDraggingBoard, setIsDraggingBoard] = useState(false);
   const [pendingProofLink, setPendingProofLink] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [memberToDelete, setMemberToDelete] = useState<{id: string, name: string} | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [folderToDelete, setFolderToDelete] = useState<BoardFolder | null>(null);
+  const [activeFolder, setActiveFolder] = useState<string>("All Work");
+  
+  // New modal state
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDropModal, setShowDropModal] = useState(false);
+  const [pendingDropGroups, setPendingDropGroups] = useState<any[]>([]);
+
   const { toast } = useToast();
 
-  const handleMagicUpload = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      toast({ title: "Invalid file", description: "Please drop an image.", variant: "destructive" });
+  const handleMagicUpload = async (files: File[]) => {
+    if (files.length === 0 || !files[0].type.startsWith('image/')) {
+      toast({ title: "Invalid file", description: "Please drop at least one image.", variant: "destructive" });
       return;
     }
 
@@ -55,31 +65,39 @@ export default function WallxyDashboard() {
     setUploadProgress(0);
     
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", uploadPreset);
+      const fileArray = Array.from(files);
+      const uploadedUrls: string[] = [];
 
-      setUploadProgress(30);
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-        method: "POST",
-        body: formData,
-      });
+      for (const file of fileArray) {
+        if (!file.type.startsWith('image/')) continue;
+        
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", uploadPreset);
 
-      if (!response.ok) throw new Error("Upload failed");
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+          method: "POST",
+          body: formData,
+        });
 
-      setUploadProgress(100);
-      const data = await response.json();
-      setPendingProofLink(data.secure_url);
-      setIsCreateModalOpen(true);
+        if (response.ok) {
+          const data = await response.json();
+          uploadedUrls.push(data.secure_url);
+        }
+      }
+
+      if (uploadedUrls.length > 0) {
+        setPendingDropGroups([{ folderName: "Batch Upload", urls: uploadedUrls }]);
+        setShowDropModal(true);
+      }
     } catch (error: any) {
       toast({ title: "Upload Failed", description: error.message, variant: "destructive" });
     } finally {
-      setTimeout(() => {
-        setIsUploading(false);
-        setUploadProgress(0);
-      }, 500);
+      setIsUploading(false);
     }
   };
+
+  const [pendingScreenshotGroups, setPendingScreenshotGroups] = useState<any[]>([]);
   
   // Merge members from database with anyone who already has a task
   const members = useMemo(() => {
@@ -96,11 +114,32 @@ export default function WallxyDashboard() {
     return Array.from(list).sort();
   }, [membersObj, tasks]);
 
+  // Derived folders list for UI tabs
+  const folders = useMemo(() => {
+    const list = boardFolders?.map(f => f.name) || [];
+    
+    // Also include folders that exist in tasks but not in explicit list (fallback)
+    tasks?.forEach(t => {
+      if (t.boardFolder && !list.includes(t.boardFolder)) {
+        list.push(t.boardFolder);
+      }
+    });
+    
+    return Array.from(new Set(list)).sort();
+  }, [boardFolders, tasks]);
+
+  const filteredTasks = useMemo(() => {
+    if (!tasks) return [];
+    if (activeFolder === "All Work") return tasks;
+    if (activeFolder === "Uncategorized") return tasks.filter(t => !t.boardFolder);
+    return tasks.filter(t => t.boardFolder === activeFolder);
+  }, [tasks, activeFolder]);
+
   const { unassigned, assigned, reviewTasks } = useMemo(() => {
-    if (!tasks) return { unassigned: [], assigned: {} as Record<string, Task[]>, reviewTasks: [] };
+    if (!filteredTasks) return { unassigned: [], assigned: {} as Record<string, Task[]>, reviewTasks: [] };
     
     // Sort all tasks by createdAt ascending (oldest first)
-    const sortedTasks = [...tasks].sort((a, b) => {
+    const sortedTasks = [...filteredTasks].sort((a, b) => {
       const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return timeA - timeB;
@@ -115,11 +154,11 @@ export default function WallxyDashboard() {
     }, {} as Record<string, Task[]>);
 
     return { unassigned: un, assigned: ass, reviewTasks: rev };
-  }, [tasks, members]);
+  }, [filteredTasks, members]);
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  if (isLoading) {
+  if (tasksLoading) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center">
         <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
@@ -160,6 +199,54 @@ export default function WallxyDashboard() {
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-foreground tracking-tight drop-shadow-sm">
           Wallxy <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">Board</span>
         </h1>
+
+        {/* Board Folders / Tabs */}
+        <div className="mt-10 flex flex-wrap justify-center gap-2 max-w-4xl mx-auto">
+          <Button 
+            variant={activeFolder === "All Work" ? "default" : "outline"} 
+            onClick={() => setActiveFolder("All Work")}
+            className="rounded-full px-6 transition-all"
+          >
+            All Work
+          </Button>
+          {tasks?.some(t => !t.boardFolder) && (
+            <Button 
+              variant={activeFolder === "Uncategorized" ? "default" : "outline"} 
+              onClick={() => setActiveFolder("Uncategorized")}
+              className="rounded-full px-6 transition-all"
+            >
+              Uncategorized
+            </Button>
+          )}
+          {folders.map(f => {
+            const isBoardFolder = boardFolders?.find(bf => bf.name === f);
+            return (
+              <div key={f} className="group relative flex items-center">
+                <Button 
+                  variant={activeFolder === f ? "default" : "outline"} 
+                  onClick={() => setActiveFolder(f)}
+                  className={cn("rounded-full transition-all flex items-center gap-2", isBoardFolder ? "pl-6 pr-10" : "px-6")}
+                >
+                  <FolderOpen className="w-4 h-4" /> {f}
+                </Button>
+                {isBoardFolder && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFolderToDelete(isBoardFolder);
+                    }}
+                    title="Remove Category"
+                    className="absolute right-1 w-7 h-7 rounded-full opacity-0 group-hover:opacity-100 text-destructive hover:bg-destructive/10 transition-opacity"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </header>
 
       <main 
@@ -181,7 +268,7 @@ export default function WallxyDashboard() {
                 e.preventDefault();
                 e.stopPropagation();
                 setIsDraggingBoard(false);
-                if (e.dataTransfer.files?.length) handleMagicUpload(e.dataTransfer.files[0]);
+                if (e.dataTransfer.files?.length) handleMagicUpload(Array.from(e.dataTransfer.files));
               }}
               className="fixed inset-0 z-[100] bg-primary/10 backdrop-blur-sm flex items-center justify-center p-8 pointer-events-auto"
             >
@@ -229,7 +316,7 @@ export default function WallxyDashboard() {
                   {unassigned.length} Tasks
                 </div>
                 <CreateMemberModal companyName="Wallxy" />
-                <Button onClick={() => setIsCreateModalOpen(true)} className="rounded-xl h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">
+                <Button onClick={() => setShowCreateModal(true)} className="rounded-xl h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">
                   <Plus className="w-4 h-4 mr-2" /> New Task
                 </Button>
               </div>
@@ -355,16 +442,6 @@ export default function WallxyDashboard() {
 
       {selectedTask && <TaskModal task={selectedTask} members={members} onClose={() => setSelectedTask(null)} />}
       
-      {isCreateModalOpen && (
-        <CreateTaskModal 
-          initialProofLink={pendingProofLink}
-          onClose={() => {
-            setIsCreateModalOpen(false);
-            setPendingProofLink("");
-          }} 
-        />
-      )}
-
       {memberToDelete && (
         <DeleteMemberDialog 
           member={memberToDelete} 
@@ -376,6 +453,28 @@ export default function WallxyDashboard() {
         <DeleteTaskDialog 
           task={taskToDelete} 
           onClose={() => setTaskToDelete(null)} 
+        />
+      )}
+
+      {folderToDelete && (
+        <DeleteFolderDialog 
+          folder={folderToDelete} 
+          onClose={() => setFolderToDelete(null)} 
+        />
+      )}
+
+      {showCreateModal && (
+        <CreateTaskModal 
+          folders={folders}
+          onClose={() => setShowCreateModal(false)} 
+        />
+      )}
+      
+      {showDropModal && (
+        <CreateTaskModal 
+          folders={folders}
+          onClose={() => setShowDropModal(false)} 
+          initialGroups={pendingDropGroups} 
         />
       )}
     </div>
@@ -486,10 +585,13 @@ function DeleteTaskDialog({ task, onClose }: { task: Task, onClose: () => void }
   );
 }
 
-function TaskGrid({ 
-  tasks, onSelect, compact = false, emptyText, onDropFile, onDeleteTask 
-}: { 
-  tasks: Task[], onSelect: (t: Task) => void, compact?: boolean, emptyText: string, onDropFile?: (file: File) => void, onDeleteTask?: (t: Task) => void
+function TaskGrid({ tasks, onSelect, compact = false, emptyText, onDropFile, onDeleteTask }: { 
+  tasks: Task[]; 
+  onSelect: (t: Task) => void; 
+  compact?: boolean; 
+  emptyText: string; 
+  onDropFile?: (files: File[]) => void; 
+  onDeleteTask?: (t: Task) => void;
 }) {
   const [isHoverDragging, setIsHoverDragging] = useState(false);
   const [showAll, setShowAll] = useState(false);
@@ -504,7 +606,7 @@ function TaskGrid({
           e.stopPropagation();
           setIsHoverDragging(false);
           if (e.dataTransfer.files?.length && onDropFile) {
-            onDropFile(e.dataTransfer.files[0]);
+            onDropFile(Array.from(e.dataTransfer.files));
           }
         }}
         className={cn(
@@ -551,6 +653,11 @@ function TaskGrid({
         <AnimatePresence mode="popLayout">
           {visibleTasks.map(task => {
             const isCompleted = task.status === "completed";
+            const groups = task.screenshotGroups || [];
+            const primaryImage = groups.length > 0 && groups[0].urls.length > 0 ? groups[0].urls[0] : 
+                               (task.proofLinks && task.proofLinks.length > 0 ? task.proofLinks[0] : task.proofLink);
+            const totalPhotos = groups.reduce((acc, g) => acc + g.urls.length, 0) || 
+                               (task.proofLinks?.length || (task.proofLink ? 1 : 0));
 
             // Completed tasks: simplified card (only image + text)
             if (isCompleted) {
@@ -564,13 +671,18 @@ function TaskGrid({
                   onClick={() => onSelect(task)}
                   className="group p-4 bg-green-50/50 dark:bg-green-950/10 border border-green-200/50 dark:border-green-800/30 hover:border-green-400/60 rounded-xl cursor-pointer transition-all active:scale-[0.98] shadow-sm overflow-hidden"
                 >
-                  {task.proofLink && (
+                  {primaryImage && (
                     <div className="relative w-full h-[60px] mb-2 rounded-lg overflow-hidden border border-green-200/40">
                       <img 
-                        src={task.proofLink} 
-                        alt="Task Screenshot" 
+                        src={primaryImage} 
+                        alt="Task" 
                         className="absolute inset-0 w-full h-full object-cover"
                       />
+                      {totalPhotos > 1 && (
+                        <div className="absolute top-1 right-1 bg-black/60 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                          <ImageIcon className="w-2 h-2" /> {totalPhotos}
+                        </div>
+                      )}
                     </div>
                   )}
                   <p className={cn(
@@ -604,13 +716,20 @@ function TaskGrid({
                 onClick={() => onSelect(task)}
                 className="group p-5 bg-background border border-border/50 hover:border-primary/40 hover:bg-muted/30 hover:shadow-md rounded-[1.25rem] cursor-pointer transition-all active:scale-[0.98] flex flex-col justify-between min-h-[120px] shadow-sm overflow-hidden"
               >
-                {task.proofLink && (
+                {primaryImage && (
                   <div className="relative w-full h-[80px] mb-3 rounded-lg overflow-hidden border border-border/40 group-hover:border-primary/20 transition-colors">
                     <img 
-                      src={task.proofLink} 
+                      src={primaryImage} 
                       alt="Task Screenshot" 
                       className="absolute inset-0 w-full h-full object-cover"
                     />
+                    <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-xl">
+                      {groups.length > 0 ? (
+                        <><FolderOpen className="w-3 h-3" /> {groups.length} Folders</>
+                      ) : (
+                        <><ImageIcon className="w-3 h-3" /> {totalPhotos} Photos</>
+                      )}
+                    </div>
                   </div>
                 )}
                 <div>
@@ -693,11 +812,23 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
   const updateTask = useUpdateWallxyTask();
   const { data: allTasks } = useWallxyTasks();
   const { data: membersObj } = useTeamMembers("Wallxy");
+  const { data: boardFolders } = useBoardFolders(); // Fetch board folders
   const { toast } = useToast();
   const [assignee, setAssignee] = useState(task.assignee || "");
   const [comment, setComment] = useState(task.comment || "");
   const [status, setStatus] = useState(task.status || "in_progress");
+  const [boardFolder, setBoardFolder] = useState(task.boardFolder || "");
   const [errors, setErrors] = useState<Record<string, boolean>>({});
+
+  // Combine existing folders from tasks and explicit board folders
+  const availableFolders = useMemo(() => {
+    const list = new Set<string>();
+    boardFolders?.forEach(f => list.add(f.name));
+    allTasks?.forEach(t => {
+      if (t.boardFolder) list.add(t.boardFolder);
+    });
+    return Array.from(list).sort();
+  }, [boardFolders, allTasks]);
 
   const handleStartTask = () => {
     if (!assignee) {
@@ -749,7 +880,7 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
     }
     setErrors({});
 
-    const updates: any = { status, comment };
+    const updates: any = { status, comment, boardFolder: boardFolder === "none" ? null : boardFolder };
     if (status === "in_list") {
       updates.assignee = null;
       // If Sir already marked this "Go for Change", preserve that status
@@ -776,27 +907,92 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
 
   const isAssigned = !!task.assignee;
   const isCompleted = task.status === "completed";
+  const groups = task.screenshotGroups || [];
+  const backupLinks = task.proofLinks || (task.proofLink ? [task.proofLink] : []);
 
   return (
     <Dialog open onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-[600px] border border-border/50 bg-card text-foreground p-0 overflow-hidden shadow-2xl rounded-[2rem]">
+      <DialogContent className="sm:max-w-[700px] border border-border/50 bg-card text-foreground p-0 overflow-hidden shadow-2xl rounded-[2rem]">
         <div className="p-6 border-b border-border/50 bg-muted/20">
           <DialogTitle className="text-2xl font-display font-bold text-foreground flex gap-3 items-center">
             <Briefcase className="w-6 h-6 text-primary" /> Task Details
           </DialogTitle>
         </div>
-        <div className="p-6 md:p-8 space-y-6">
-          {task.proofLink && (
-            <div className="relative w-full h-[250px] rounded-[1.5rem] overflow-hidden border border-border/50 group">
-              <img 
-                src={task.proofLink} 
-                alt="Task Screenshot" 
-                className="absolute inset-0 w-full h-full object-contain"
-              />
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Button variant="secondary" onClick={() => window.open(task.proofLink!, '_blank')}>View Full Size</Button>
+        <div className="p-6 md:p-8 space-y-8 overflow-y-auto max-h-[85vh] custom-scrollbar">
+          {/* Board Folder / Project Categorization */}
+          <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Folder className="w-5 h-5 text-primary" />
+              <div className="space-y-0.5">
+                <p className="text-[10px] uppercase tracking-widest font-black text-primary/60">Project / Folder</p>
+                <div className="relative">
+                  <input 
+                    value={boardFolder}
+                    onChange={(e) => setBoardFolder(e.target.value)}
+                    placeholder="Uncategorized"
+                    list="modal-folder-list"
+                    className="bg-transparent border-none p-0 text-sm font-bold focus:ring-0 w-full placeholder:text-muted-foreground/30"
+                  />
+                  <datalist id="modal-folder-list">
+                    {availableFolders.map(f => (
+                      <option key={f} value={f} />
+                    ))}
+                  </datalist>
+                </div>
               </div>
             </div>
+            <p className="text-[10px] text-muted-foreground font-medium italic">Edit to move task</p>
+          </div>
+
+          {/* Folders Review View */}
+          {groups.length > 0 ? (
+            <div className="space-y-10">
+              {groups.map((group, gIdx) => (
+                <div key={gIdx} className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-xl">
+                      <FolderOpen className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-foreground">{group.folderName}</h3>
+                      <p className="text-xs text-muted-foreground font-medium">{group.urls.length} images to review</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {group.urls.map((url, iIdx) => (
+                      <div key={iIdx} className="relative w-full aspect-video rounded-2xl overflow-hidden border border-border/50 group bg-muted/5 shadow-sm">
+                        <img 
+                          src={url} 
+                          alt={`${group.folderName} screenshot`} 
+                          className="absolute inset-0 w-full h-full object-contain"
+                        />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Button variant="secondary" size="sm" onClick={() => window.open(url, '_blank')}>View Full Size</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {gIdx < groups.length - 1 && <hr className="border-border/40 mt-6" />}
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Traditional View for old tasks */
+            backupLinks.length > 0 && (
+              <div className="grid grid-cols-1 gap-4">
+                {backupLinks.map((url, idx) => (
+                  <div key={idx} className="relative w-full h-[250px] rounded-[1.5rem] overflow-hidden border border-border/50 group bg-muted/5">
+                    <img 
+                      src={url} 
+                      className="absolute inset-0 w-full h-full object-contain"
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button variant="secondary" onClick={() => window.open(url, '_blank')}>View Full Size</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
           )}
           <div className="bg-muted/20 p-5 rounded-[1.5rem] border border-border/50">
             <h4 className="text-[11px] uppercase tracking-widest text-primary font-bold mb-2">Description</h4>
@@ -873,26 +1069,28 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
   );
 }
 
-function CreateTaskModal({ onClose, initialProofLink = "" }: { onClose: () => void; initialProofLink?: string }) {
+function CreateTaskModal({ onClose, folders = [], initialGroups = [] }: { onClose: () => void; folders?: string[]; initialGroups?: any[] }) {
   const createTask = useCreateWallxyTask();
   const { toast } = useToast();
   const [description, setDescription] = useState("");
-  const [proofLink, setProofLink] = useState(initialProofLink);
+  const [screenshotGroups, setScreenshotGroups] = useState<any[]>(initialGroups.length > 0 ? initialGroups : [{ folderName: "Screenshots", urls: [] }]);
+  const [boardFolder, setBoardFolder] = useState("");
   const [errors, setErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (initialProofLink) setProofLink(initialProofLink);
-  }, [initialProofLink]);
+    if (initialGroups.length > 0) setScreenshotGroups(initialGroups);
+  }, [initialGroups]);
 
   const handleSubmit = () => {
     const newErrors: Record<string, boolean> = {};
-    
-    if (!description.trim() && !proofLink.trim()) {
+    const hasImages = screenshotGroups.some(g => g.urls.length > 0);
+
+    if (!description.trim() && !hasImages) {
       newErrors.description = true;
-      newErrors.proofLink = true;
+      newErrors.screenshotGroups = true;
       toast({ 
         title: "Fields Required! ⚠️", 
-        description: "Please add a description or upload a screenshot.", 
+        description: "Please add a description or upload screenshots into folders.", 
         variant: "destructive" 
       });
       setErrors(newErrors);
@@ -900,9 +1098,13 @@ function CreateTaskModal({ onClose, initialProofLink = "" }: { onClose: () => vo
     }
     setErrors({});
 
-    createTask.mutate({ description, proofLink }, {
+    createTask.mutate({ 
+      description, 
+      screenshotGroups, 
+      boardFolder: boardFolder === "none" ? "" : boardFolder 
+    }, {
       onSuccess: () => {
-        toast({ title: "Created!", description: "Task added to board" });
+        toast({ title: "Created!", description: "Task added to " + (boardFolder || "Board") });
         onClose();
       }
     });
@@ -910,27 +1112,94 @@ function CreateTaskModal({ onClose, initialProofLink = "" }: { onClose: () => vo
 
   return (
     <Dialog open onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-[500px] border border-border/50 bg-card rounded-[2rem]">
-        <div className="p-6 border-b border-border/50"><DialogTitle className="text-xl font-bold">New Task</DialogTitle></div>
-        <div className="p-6 space-y-6">
-          <div>
+      <DialogContent className="sm:max-w-[500px] border border-border/50 bg-card rounded-[2rem] overflow-hidden p-0">
+        <div className="p-6 border-b border-border/50 bg-muted/20">
+          <DialogTitle className="text-xl font-bold">New Task</DialogTitle>
+        </div>
+        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+          <div className="space-y-4">
+            <label className="text-[11px] uppercase tracking-widest text-primary font-bold ml-1">Task Details</label>
             <Textarea 
               value={description} 
               onChange={(e) => { setDescription(e.target.value); setErrors(prev => ({ ...prev, description: false })); }} 
-              placeholder="Description..." 
-              className={cn("h-28 rounded-xl", errors.description && "border-red-500 border-2 ring-2 ring-red-500/20")} 
+              placeholder="Describe the work..." 
+              className={cn("min-h-[120px] rounded-2xl bg-muted/5 focus:bg-background transition-colors", errors.description && "border-red-500")} 
             />
-            {errors.description && (
-              <p className="text-red-500 text-xs font-bold mt-1.5 ml-1">⚠ Add a description or screenshot</p>
-            )}
           </div>
-          <div>
-            <ScreenshotUpload value={proofLink} onChange={(v) => { setProofLink(v); setErrors(prev => ({ ...prev, proofLink: false })); }} />
-            {errors.proofLink && !errors.description && (
-              <p className="text-red-500 text-xs font-bold mt-1.5 ml-1">⚠ Upload a screenshot or add description</p>
-            )}
+
+          <div className="space-y-4">
+            <label className="text-[11px] uppercase tracking-widest text-primary font-bold ml-1">Project / Category</label>
+            <Select value={boardFolder || "none"} onValueChange={setBoardFolder}>
+              <SelectTrigger className="h-12 rounded-2xl bg-muted/5">
+                <SelectValue placeholder="Select Project" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Uncategorized</SelectItem>
+                {folders.map(f => (
+                  <SelectItem key={f} value={f}>{f}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Link href="/wallxy/new" className="inline-flex items-center gap-1.5 text-[10px] text-primary hover:underline font-bold ml-1">
+              <Plus className="w-3 h-3" /> Create New Folder
+            </Link>
           </div>
-          <Button onClick={handleSubmit} disabled={createTask.isPending} className="w-full h-12 rounded-xl font-bold">{createTask.isPending ? "Adding..." : "Add Task"}</Button>
+
+          <div className="space-y-4 pt-2">
+            <label className="text-[11px] uppercase tracking-widest text-primary font-bold ml-1">Screenshots</label>
+            <ScreenshotUpload value={screenshotGroups} onChange={setScreenshotGroups} />
+          </div>
+
+          <Button 
+            onClick={handleSubmit} 
+            disabled={createTask.isPending} 
+            className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20"
+          >
+            {createTask.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Add Task to Board"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DeleteFolderDialog({ folder, onClose }: { folder: BoardFolder, onClose: () => void }) {
+  const deleteFolder = useDeleteBoardFolder();
+  const { toast } = useToast();
+
+  const handleConfirm = () => {
+    deleteFolder.mutate(folder.id.toString(), {
+      onSuccess: () => {
+        toast({ title: "Category Removed", description: `"${folder.name}" has been deleted.` });
+        onClose();
+      },
+      onError: (err: any) => {
+        toast({ title: "Error", description: err.message, variant: "destructive" });
+      }
+    });
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[400px] border-border/50 bg-card p-6">
+        <DialogTitle className="text-xl font-bold flex items-center gap-2 text-destructive">
+          <Trash2 className="w-5 h-5" /> Delete Category
+        </DialogTitle>
+        <div className="py-4">
+          <p className="text-muted-foreground text-sm">
+            Are you sure you want to remove the category <strong>"{folder.name}"</strong>? This will remove the tab, but tasks inside it will remain visible under their existing categorization.
+          </p>
+        </div>
+        <div className="flex justify-end gap-3 mt-4">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button 
+            variant="destructive" 
+            onClick={handleConfirm}
+            disabled={deleteFolder.isPending}
+          >
+            {deleteFolder.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+            Delete Category
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

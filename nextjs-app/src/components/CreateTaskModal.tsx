@@ -59,6 +59,8 @@ export function CreateTaskModal() {
           description: "", 
           status: "in_progress", 
           proofLink: "",
+          proofLinks: [],
+          screenshotGroups: [{ folderName: "Screenshots", urls: [] }],
           checkInTime: "",
           checkOutTime: "",
         }
@@ -150,7 +152,7 @@ export function CreateTaskModal() {
           ...form.getValues(),
           companyName: "",
           dateOfJoin: "",
-          tasks: [{ description: "", status: "in_progress", proofLink: "" }],
+          tasks: [{ description: "", status: "in_progress", screenshotGroups: [{ folderName: "Screenshots", urls: [] }] }],
           secretCode: "",
         });
       },
@@ -288,6 +290,8 @@ export function CreateTaskModal() {
                           description: "", 
                           status: "in_progress",
                           proofLink: "",
+                          proofLinks: [],
+                          screenshotGroups: [{ folderName: "Screenshots", urls: [] }],
                           checkInTime: "",
                           checkOutTime: "",
                         })}
@@ -359,13 +363,12 @@ export function CreateTaskModal() {
                             <div>
                               <FormField
                                 control={form.control}
-                                name={`tasks.${index}.proofLink`}
+                                name={`tasks.${index}.screenshotGroups`}
                                 render={({ field }) => (
                                   <FormItem className="space-y-1">
-                                    <FormLabel className="text-xs font-medium text-muted-foreground">Screenshot / Proof</FormLabel>
                                     <FormControl>
                                       <ScreenshotUpload 
-                                        value={field.value || ""} 
+                                        value={field.value || []} 
                                         onChange={field.onChange} 
                                       />
                                     </FormControl>

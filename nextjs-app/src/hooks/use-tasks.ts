@@ -1,6 +1,11 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { type Task, type Member, type InsertMember, type CreateTasksBulkRequest, api, buildUrl } from "@/shared/routes";
+import { apiRequest } from "@/lib/queryClient";
+import { 
+  type Task, type InsertTask, type Member, type ScreenshotGroup,
+  type BoardFolder, type InsertBoardFolder,
+  type InsertMember, type CreateTasksBulkRequest
+} from "../shared/schema";
+import { api, buildUrl } from "@/shared/routes";
 
 function parseWithLogging<T>(schema: any, data: unknown, label: string): T {
   const result = schema.safeParse(data);
@@ -26,19 +31,18 @@ export function useTasks(companyName?: string) {
 
 export function useCreateWallxyTask() {
   const queryClient = useQueryClient();
-  
   return useMutation({
-    mutationFn: async (data: { description: string, proofLink?: string }) => {
-      const res = await fetch("/api/wallxy/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error("Failed to create Wallxy task");
-      return await res.json();
+    mutationFn: async (task: {
+      description: string;
+      proofLinks?: string[];
+      screenshotGroups?: any[];
+      boardFolder?: string;
+    }) => {
+      const res = await apiRequest("POST", "/api/wallxy/tasks", task);
+      return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/wallxy/tasks'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/wallxy/tasks"] });
     },
   });
 }
@@ -495,6 +499,43 @@ export function useCreatePlan() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.tasks.list.path] });
+    },
+  });
+}
+
+export function useBoardFolders(companyName: string = "Wallxy") {
+  return useQuery<BoardFolder[]>({
+    queryKey: ["/api/wallxy/folders", companyName],
+    queryFn: async () => {
+      const res = await fetch(`/api/wallxy/folders?company=${companyName}`);
+      if (!res.ok) throw new Error("Failed to fetch folders");
+      return res.json();
+    },
+  });
+}
+
+export function useCreateBoardFolder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (folder: InsertBoardFolder) => {
+      const res = await apiRequest("POST", "/api/wallxy/folders", folder);
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/wallxy/folders", variables.companyName] });
+    },
+  });
+}
+
+export function useDeleteBoardFolder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("DELETE", `/api/wallxy/folders?id=${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/wallxy/folders"] });
     },
   });
 }

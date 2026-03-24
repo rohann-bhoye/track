@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export const screenshotGroupSchema = z.object({
+  folderName: z.string(),
+  urls: z.array(z.string()),
+});
+
+export type ScreenshotGroup = z.infer<typeof screenshotGroupSchema>;
+
 // Pure Zod schema — no drizzle-orm dependency (app uses Firebase, not Postgres)
 export const insertTaskSchema = z.object({
   companyName: z.string().min(1),
@@ -12,6 +19,8 @@ export const insertTaskSchema = z.object({
   checkInTime: z.string().nullable().optional(),
   checkOutTime: z.string().nullable().optional(),
   proofLink: z.string().nullable().optional(),
+  proofLinks: z.array(z.string()).optional(),
+  screenshotGroups: z.array(screenshotGroupSchema).optional(),
   nextWeekPlan: z.string().nullable().optional(),
   assignee: z.string().nullable().optional(),
 });
@@ -29,6 +38,8 @@ export const taskSchema = z.object({
   checkInTime: z.string().nullable().optional(),
   checkOutTime: z.string().nullable().optional(),
   proofLink: z.string().nullable().optional(),
+  proofLinks: z.array(z.string()).optional(),
+  screenshotGroups: z.array(screenshotGroupSchema).optional(),
   createdAt: z.coerce.date().nullable().optional(),
   completedAt: z.coerce.date().nullable().optional(),
   originalDate: z.string().nullable().optional(),
@@ -36,6 +47,7 @@ export const taskSchema = z.object({
   nextWeekPlan: z.string().nullable().optional(),
   assignee: z.string().nullable().optional(),
   comment: z.string().nullable().optional(),
+  boardFolder: z.string().optional().nullable(),
 });
 
 export const createTasksBulkRequestSchema = z.object({
@@ -50,8 +62,11 @@ export const createTasksBulkRequestSchema = z.object({
     checkInTime: z.string().optional(),
     checkOutTime: z.string().optional(),
     proofLink: z.string().optional(),
-    nextWeekPlan: z.string().optional(), // Store per task in DB
+    proofLinks: z.array(z.string()).optional(),
+    screenshotGroups: z.array(screenshotGroupSchema).optional(),
+    nextWeekPlan: z.string().optional(), 
     assignee: z.string().optional(),
+    boardFolder: z.string().optional(),
   })).min(1, "You didn't do any work? You must add at least one task! 🛌"),
   secretCode: z.string().min(1, "Hold up! We need the secret passkey to let you in 🛑"),
 });
@@ -81,6 +96,9 @@ export const updateTaskStatusSchema = z.object({
   dateOfJoin: z.string().optional(),
   description: z.string().optional(),
   proofLink: z.string().optional(),
+  proofLinks: z.array(z.string()).optional(),
+  screenshotGroups: z.array(screenshotGroupSchema).optional(),
+  boardFolder: z.string().optional(),
   nextWeekPlan: z.string().optional(),
   originalDate: z.string().optional(),
   assignee: z.string().nullable().optional(),
@@ -88,12 +106,25 @@ export const updateTaskStatusSchema = z.object({
   secretCode: z.string().min(1, "Hold up! We need the secret passkey to let you in 🛑"),
 });
 
+export const boardFolderSchema = z.object({
+  id: z.string().or(z.number()),
+  name: z.string().min(1, "What should we call this project? 📁"),
+  companyName: z.string().min(1, "Which company is this for? 🏢"),
+  createdAt: z.coerce.date().nullable().optional(),
+});
+
+export const insertBoardFolderSchema = boardFolderSchema.omit({ id: true, createdAt: true });
+
+export const boardFoldersSchema = z.array(boardFolderSchema);
+
 export const deleteTaskRequestSchema = z.object({
   secretCode: z.string().min(1, "Hold up! We need the secret passkey to let you in 🛑"),
 });
 
 export type Task = z.infer<typeof taskSchema>;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
+export type BoardFolder = z.infer<typeof boardFolderSchema>;
+export type InsertBoardFolder = z.infer<typeof insertBoardFolderSchema>;
 export type UpdateTaskStatusRequest = z.infer<typeof updateTaskStatusSchema>;
 export type TaskResponse = Task;
 export type TasksListResponse = Task[];

@@ -1,4 +1,7 @@
-import { type Task, type InsertTask, type Member, type InsertMember } from "@/shared/schema";
+import { 
+  type Task, type InsertTask, type Member, type InsertMember,
+  type BoardFolder, type InsertBoardFolder
+} from "@/shared/schema";
 import { collection, getDocs, addDoc, updateDoc, doc, Timestamp, query, orderBy } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -15,6 +18,8 @@ export interface IStorage {
   getMembers(companyName?: string): Promise<Member[]>;
   createMember(member: InsertMember): Promise<Member>;
   deleteMember(id: string): Promise<void>;
+  getBoardFolders(companyName?: string): Promise<BoardFolder[]>;
+  createBoardFolder(folder: InsertBoardFolder): Promise<BoardFolder>;
 }
 
 export class FirebaseStorage implements IStorage {
@@ -229,6 +234,45 @@ export class FirebaseStorage implements IStorage {
   async deleteMember(id: string): Promise<void> {
     const { deleteDoc } = await import("firebase/firestore");
     const docRef = doc(db, "team_members", id);
+    await deleteDoc(docRef);
+  }
+
+  // --- Board Folder Methods ---
+  async getBoardFolders(companyName?: string): Promise<BoardFolder[]> {
+    try {
+      const folderCol = collection(db, "board_folders");
+      const q = query(folderCol, orderBy("createdAt", "asc"));
+      const snapshot = await getDocs(q);
+      
+      let folders = snapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id,
+        createdAt: doc.data().createdAt?.toDate() || null,
+      } as BoardFolder));
+
+      if (companyName) {
+        folders = folders.filter(f => f.companyName === companyName);
+      }
+      return folders;
+    } catch (e) {
+      console.error("Error fetching board folders:", e);
+      return [];
+    }
+  }
+
+  async createBoardFolder(insertFolder: InsertBoardFolder): Promise<BoardFolder> {
+    const folderCol = collection(db, "board_folders");
+    const data = {
+      ...insertFolder,
+      createdAt: Timestamp.now(),
+    };
+    const docRef = await addDoc(folderCol, data);
+    return { ...data, id: docRef.id, createdAt: data.createdAt.toDate() } as BoardFolder;
+  }
+
+  async deleteBoardFolder(id: string): Promise<void> {
+    const { deleteDoc, doc } = await import("firebase/firestore");
+    const docRef = doc(db, "board_folders", id);
     await deleteDoc(docRef);
   }
 }
