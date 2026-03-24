@@ -817,7 +817,7 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
   const [assignee, setAssignee] = useState(task.assignee || "");
   const [comment, setComment] = useState(task.comment || "");
   const [status, setStatus] = useState(task.status || "in_progress");
-  const [boardFolder, setBoardFolder] = useState(task.boardFolder || "");
+  const [boardFolder, setBoardFolder] = useState<string>(task.boardFolder || "none");
   const [errors, setErrors] = useState<Record<string, boolean>>({});
 
   // Combine existing folders from tasks and explicit board folders
@@ -925,19 +925,18 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
               <Folder className="w-5 h-5 text-primary" />
               <div className="space-y-0.5">
                 <p className="text-[10px] uppercase tracking-widest font-black text-primary/60">Project / Folder</p>
-                <div className="relative">
-                  <input 
-                    value={boardFolder}
-                    onChange={(e) => setBoardFolder(e.target.value)}
-                    placeholder="Uncategorized"
-                    list="modal-folder-list"
-                    className="bg-transparent border-none p-0 text-sm font-bold focus:ring-0 w-full placeholder:text-muted-foreground/30"
-                  />
-                  <datalist id="modal-folder-list">
-                    {availableFolders.map(f => (
-                      <option key={f} value={f} />
-                    ))}
-                  </datalist>
+                <div className="relative min-w-[180px]">
+                  <Select value={boardFolder} onValueChange={setBoardFolder}>
+                    <SelectTrigger className="bg-transparent border-none p-0 h-auto text-sm font-bold shadow-none focus:ring-0 [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-primary/50 hover:[&>svg]:text-primary transition-colors">
+                      <SelectValue placeholder="Uncategorized" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-border/50 shadow-xl">
+                      <SelectItem value="none" className="text-muted-foreground italic font-medium">Uncategorized</SelectItem>
+                      {availableFolders.map(f => (
+                        <SelectItem key={f} value={f} className="font-bold">{f}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
