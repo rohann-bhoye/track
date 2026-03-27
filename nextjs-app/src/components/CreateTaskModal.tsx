@@ -5,8 +5,6 @@ import { format, isSunday, parseISO } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, Briefcase, Calendar, FileText, Loader2, Plus, Trash2, CheckCircle2, Clock, ListTodo, Link as LinkIcon, Palmtree, CalendarX, Sparkles } from "lucide-react";
 
-import { ScreenshotUpload } from "./ScreenshotUpload";
-
 import {
   Dialog,
   DialogContent,
@@ -59,8 +57,6 @@ export function CreateTaskModal() {
           description: "", 
           status: "in_progress", 
           proofLink: "",
-          proofLinks: [],
-          screenshotGroups: [{ folderName: "Screenshots", urls: [] }],
           checkInTime: "",
           checkOutTime: "",
         }
@@ -152,7 +148,7 @@ export function CreateTaskModal() {
           ...form.getValues(),
           companyName: "",
           dateOfJoin: "",
-          tasks: [{ description: "", status: "in_progress", screenshotGroups: [{ folderName: "Screenshots", urls: [] }] }],
+          tasks: [{ description: "", status: "in_progress", proofLink: "" }],
           secretCode: "",
         });
       },
@@ -277,50 +273,50 @@ export function CreateTaskModal() {
                   </div>
 
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                       <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
                         <ListTodo className="w-4 h-4 text-primary" />
                         Task List ({fields.length})
                       </h3>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => append({ 
-                          description: "", 
-                          status: "in_progress",
-                          proofLink: "",
-                          proofLinks: [],
-                          screenshotGroups: [{ folderName: "Screenshots", urls: [] }],
-                          checkInTime: "",
-                          checkOutTime: "",
-                        })}
-                        className="h-8 rounded-lg text-primary border-primary/20 hover:bg-primary/5"
-                      >
-                        <Plus className="w-4 h-4 mr-1" />
-                        Add Another
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => {
-                          // Clear existing and add a leave task
-                          form.setValue("tasks", [{ 
-                            description: "On Leave / Personal Work", 
-                            status: "leave"
-                          } as any]);
-                          toast({
-                            title: "Marked as Leave",
-                            description: "Task description and status updated.",
-                            duration: 2000,
-                          });
-                        }}
-                        className="h-8 rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-transparent hover:border-rose-100"
-                      >
-                        <CalendarX className="w-4 h-4 mr-1" />
-                        Mark as Leave
-                      </Button>
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => append({ 
+                            description: "", 
+                            status: "in_progress",
+                            proofLink: "",
+                            checkInTime: "",
+                            checkOutTime: "",
+                          })}
+                          className="h-8 flex-1 sm:flex-none rounded-lg text-primary border-primary/20 hover:bg-primary/5"
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Add Task
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            // Clear existing and add a leave task
+                            form.setValue("tasks", [{ 
+                              description: "On Leave / Personal Work", 
+                              status: "leave"
+                            } as any]);
+                            toast({
+                              title: "Marked as Leave",
+                              description: "Task description and status updated.",
+                              duration: 2000,
+                            });
+                          }}
+                          className="h-8 flex-1 sm:flex-none rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-transparent hover:border-rose-100"
+                        >
+                          <CalendarX className="w-4 h-4 mr-1" />
+                          Leave
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="space-y-4">
@@ -363,13 +359,19 @@ export function CreateTaskModal() {
                             <div>
                               <FormField
                                 control={form.control}
-                                name={`tasks.${index}.screenshotGroups`}
+                                name={`tasks.${index}.proofLink`}
                                 render={({ field }) => (
                                   <FormItem className="space-y-1">
+                                    <FormLabel className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                                      <LinkIcon className="w-3.5 h-3.5 text-primary" />
+                                      Proof Link
+                                    </FormLabel>
                                     <FormControl>
-                                      <ScreenshotUpload 
-                                        value={field.value || []} 
-                                        onChange={field.onChange} 
+                                      <Input 
+                                        placeholder="https://..." 
+                                        className="h-9 rounded-lg border-muted-foreground/20 text-xs" 
+                                        {...field} 
+                                        value={field.value || ""}
                                       />
                                     </FormControl>
                                     <FormMessage />
