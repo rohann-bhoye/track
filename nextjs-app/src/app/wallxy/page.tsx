@@ -842,23 +842,7 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
     }
     setErrors({});
 
-    // Check task limit (max 2 active tasks)
-    const activeTasks = allTasks?.filter(t => t.assignee === assignee && t.status !== "completed" && t.status !== "review") || [];
-    if (activeTasks.length >= 2) {
-      const member = membersObj?.find(m => m.name === assignee);
-      const isFemale = member?.gender === "female";
-      
-      const message = isFemale 
-        ? `Ag ${assignee}, pyle te ${activeTasks.length} task purn kar ani m ajun gheee ka ash karte chal kar bar!`
-        : `Aree ${assignee}, pyle te ${activeTasks.length} task purn kar ani m ajun gheee ka ash kart chal kar bar!`;
-      
-      toast({ 
-        title: "Rule is Rule! 🛑", 
-        description: message, 
-        variant: "destructive" 
-      });
-      return;
-    }
+    // No task limit imposed; users can take unlimited tasks.
 
     updateTask.mutate({ id: task.id, updates: { status: "in_progress", assignee } }, {
       onSuccess: () => {
