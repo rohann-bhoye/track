@@ -41,9 +41,8 @@ import {
   ShieldAlert,
   Sparkles,
   Zap,
+  Link as LinkIcon,
 } from "lucide-react";
-
-import { ScreenshotUpload } from "@/components/ScreenshotUpload";
 
 import { useTasks, useUpdateTask, useVerifyCode, useDeleteTask } from "@/hooks/use-tasks";
 import { Button } from "@/components/ui/button";
@@ -264,7 +263,7 @@ export default function CompanyDetail() {
       endDate: "",
       taskDate: "",
       description: "",
-      screenshotGroups: [] as any[],
+      proofLink: "",
       checkInTime: "",
       checkOutTime: "",
       dateOfJoin: "",
@@ -280,7 +279,7 @@ export default function CompanyDetail() {
       endDate: task.endDate || "",
       taskDate: task.taskDate || "",
       description: task.description || "",
-      screenshotGroups: task.screenshotGroups || [],
+      proofLink: task.proofLink || "",
       checkInTime: task.checkInTime || "",
       checkOutTime: task.checkOutTime || "",
       dateOfJoin: task.dateOfJoin || "",
@@ -301,7 +300,7 @@ export default function CompanyDetail() {
         endDate: values.endDate,
         taskDate: values.taskDate,
         description: values.description,
-        screenshotGroups: values.screenshotGroups,
+        proofLink: values.proofLink,
         checkInTime: values.checkInTime,
         checkOutTime: values.checkOutTime,
         dateOfJoin: values.dateOfJoin,
@@ -879,14 +878,19 @@ export default function CompanyDetail() {
 
                       <FormField
                         control={editForm.control}
-                        name="screenshotGroups"
+                        name="proofLink"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-foreground/80 font-bold">Screenshot / Proof</FormLabel>
+                            <FormLabel className="text-foreground/80 font-bold flex items-center gap-1.5">
+                              <LinkIcon className="w-4 h-4 text-primary" />
+                              Proof Link
+                            </FormLabel>
                             <FormControl>
-                              <ScreenshotUpload 
-                                value={field.value || []} 
-                                onChange={field.onChange} 
+                              <Input 
+                                placeholder="https://..." 
+                                className="h-12 rounded-2xl border-primary/20" 
+                                {...field} 
+                                value={field.value || ""}
                               />
                             </FormControl>
                             <FormMessage />
