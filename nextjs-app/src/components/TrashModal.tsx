@@ -159,8 +159,8 @@ export function TrashModal() {
                       onClick={() => handleRestore(company.name)}
                       disabled={restoreMutation.isPending || permanentDeleteMutation.isPending}
                     >
-                      <RefreshCcw className="w-4 h-4 mr-2" />
-                      Restore
+                      {restoreMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCcw className="w-4 h-4 mr-2" />}
+                      {restoreMutation.isPending ? "Restoring..." : "Restore"}
                     </Button>
                     <Button 
                       variant="outline" 
@@ -200,10 +200,14 @@ export function TrashModal() {
           <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel className="rounded-xl h-11">Cancel</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={confirmPermanentDelete}
-              className="rounded-xl h-11 bg-destructive hover:bg-destructive/90 shadow-lg shadow-destructive/20"
+              onClick={(e) => {
+                e.preventDefault();
+                confirmPermanentDelete();
+              }}
+              disabled={permanentDeleteMutation.isPending}
+              className="rounded-xl h-11 bg-destructive hover:bg-destructive/90 shadow-lg shadow-destructive/20 min-w-[140px]"
             >
-              Permanently Delete
+              {permanentDeleteMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : "Permanently Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

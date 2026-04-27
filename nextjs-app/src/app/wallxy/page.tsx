@@ -13,7 +13,8 @@ import {
   useBoardFolders, useCreateBoardFolder, useDeleteBoardFolder
 } from "@/hooks/use-tasks";
 import { type Task, type BoardFolder } from "@/shared/schema";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,6 +40,7 @@ export default function WallxyDashboard() {
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [folderToDelete, setFolderToDelete] = useState<BoardFolder | null>(null);
   const [activeFolder, setActiveFolder] = useState<string>("All Work");
+  const [previewData, setPreviewData] = useState<{ urls: string[], index: number } | null>(null);
   
   // New modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -149,7 +151,7 @@ export default function WallxyDashboard() {
     const rev = sortedTasks.filter(t => t.status === "review");
     
     const ass = members.reduce((acc, m) => {
-      acc[m] = sortedTasks.filter(t => t.assignee === m);
+      acc[m] = sortedTasks.filter(t => t.assignee === m && t.status !== "review");
       return acc;
     }, {} as Record<string, Task[]>);
 
@@ -440,7 +442,34 @@ export default function WallxyDashboard() {
         </div>
       </main>
 
-      {selectedTask && <TaskModal task={selectedTask} members={members} onClose={() => setSelectedTask(null)} />}
+      {selectedTask && (
+        <TaskModal 
+          task={selectedTask} 
+          members={members} 
+          onClose={() => setSelectedTask(null)} 
+          onPreview={(urls, index) => setPreviewData({ urls, index })} 
+          onNext={(() => {
+            const currentList = tasks?.filter(t => {
+              if (selectedTask.status === "review") return t.status === "review";
+              if (!selectedTask.assignee) return !t.assignee && t.status !== "review" && t.status !== "completed";
+              return t.assignee === selectedTask.assignee && t.status !== "review";
+            }) || [];
+            const idx = currentList.findIndex(t => t.id === selectedTask.id);
+            if (idx < currentList.length - 1) return () => setSelectedTask(currentList[idx + 1]);
+            return undefined;
+          })()}
+          onPrev={(() => {
+            const currentList = tasks?.filter(t => {
+              if (selectedTask.status === "review") return t.status === "review";
+              if (!selectedTask.assignee) return !t.assignee && t.status !== "review" && t.status !== "completed";
+              return t.assignee === selectedTask.assignee && t.status !== "review";
+            }) || [];
+            const idx = currentList.findIndex(t => t.id === selectedTask.id);
+            if (idx > 0) return () => setSelectedTask(currentList[idx - 1]);
+            return undefined;
+          })()}
+        />
+      )}
       
       {memberToDelete && (
         <DeleteMemberDialog 
@@ -477,7 +506,112 @@ export default function WallxyDashboard() {
           initialGroups={pendingDropGroups} 
         />
       )}
+
+      {previewData && (
+        <ImagePreviewModal 
+          urls={previewData.urls} 
+          initialIndex={previewData.index} 
+          onClose={() => setPreviewData(null)} 
+        />
+      )}
     </div>
+  );
+}
+
+function ImagePreviewModal({ urls, initialIndex, onClose }: { urls: string[], initialIndex: number, onClose: () => void }) {
+  const [index, setIndex] = useState(initialIndex);
+  const url = urls[index];
+
+  const handlePrev = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setIndex((prev) => (prev > 0 ? prev - 1 : urls.length - 1));
+  };
+
+  const handleNext = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setIndex((prev) => (prev < urls.length - 1 ? prev + 1 : 0));
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") handlePrev();
+      if (e.key === "ArrowRight") handleNext();
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-[100vw] w-screen h-screen p-0 border-none bg-black/90 shadow-none flex items-center justify-center overflow-hidden">
+        <div className="sr-only">
+          <DialogTitle>Image Preview</DialogTitle>
+          <DialogDescription>Full size view of screenshot {index + 1} of {urls.length}</DialogDescription>
+        </div>
+        
+        <div className="relative w-full h-full flex items-center justify-center">
+          {/* Main Image */}
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={url}
+              src={url}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.2 }}
+              alt="Preview"
+              className="max-w-[90vw] max-h-[90vh] object-contain shadow-2xl rounded-sm"
+            />
+          </AnimatePresence>
+
+          {/* Navigation Controls */}
+          {urls.length > 1 && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute left-4 sm:left-8 w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/10 hover:bg-white/20 text-white border-white/10 backdrop-blur-md transition-all hover:scale-110 active:scale-95"
+                onClick={handlePrev}
+              >
+                <ChevronLeft className="w-8 h-8 sm:w-10 sm:h-10" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-4 sm:right-8 w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/10 hover:bg-white/20 text-white border-white/10 backdrop-blur-md transition-all hover:scale-110 active:scale-95"
+                onClick={handleNext}
+              >
+                <ChevronRight className="w-8 h-8 sm:w-10 sm:h-10" />
+              </Button>
+            </>
+          )}
+
+          {/* Top Bar Actions */}
+          <div className="absolute top-6 right-6 flex gap-3">
+            <Badge variant="secondary" className="h-10 px-4 flex items-center bg-white/10 text-white border-white/10 backdrop-blur-md rounded-xl font-mono text-sm">
+              {index + 1} / {urls.length}
+            </Badge>
+            <Button 
+              variant="secondary" 
+              size="icon" 
+              className="h-10 w-10 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border-white/10"
+              onClick={() => window.open(url, '_blank')}
+            >
+              <ExternalLink className="w-5 h-5" />
+            </Button>
+            <Button 
+              variant="secondary" 
+              size="icon" 
+              className="h-10 w-10 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border-white/10"
+              onClick={onClose}
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -808,7 +942,16 @@ function TaskGrid({ tasks, onSelect, compact = false, emptyText, onDropFile, onD
   );
 }
 
-function TaskModal({ task, members, onClose }: { task: Task; members: string[]; onClose: () => void }) {
+function TaskModal({ 
+  task, members, onClose, onPreview, onNext, onPrev 
+}: { 
+  task: Task; 
+  members: string[]; 
+  onClose: () => void; 
+  onPreview: (urls: string[], index: number) => void;
+  onNext?: () => void;
+  onPrev?: () => void;
+}) {
   const updateTask = useUpdateWallxyTask();
   const { data: allTasks } = useWallxyTasks();
   const { data: membersObj } = useTeamMembers("Wallxy");
@@ -894,37 +1037,79 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
   const groups = task.screenshotGroups || [];
   const backupLinks = task.proofLinks || (task.proofLink ? [task.proofLink] : []);
 
+  const proofLinks = useMemo(() => {
+    const list: string[] = [];
+    groups.forEach(g => g.urls.forEach(u => list.push(u)));
+    backupLinks.forEach(u => { if(!list.includes(u)) list.push(u); });
+    return list;
+  }, [groups, backupLinks]);
+
   return (
     <Dialog open onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-[700px] border border-border/50 bg-card text-foreground p-0 overflow-hidden shadow-2xl rounded-[2rem]">
+      <DialogContent className="sm:max-w-[700px] border border-border/50 bg-card text-foreground p-0 overflow-visible shadow-2xl rounded-[2rem]">
+        {/* Task Navigation Arrows */}
+        <div className="absolute inset-0 -z-10 pointer-events-none">
+          {onPrev && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute -left-4 sm:-left-20 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-white/20 sm:bg-white/10 hover:bg-white/30 sm:hover:bg-white/20 text-white border border-white/20 backdrop-blur-md transition-all hover:scale-110 active:scale-95 pointer-events-auto z-50"
+              onClick={(e) => { e.stopPropagation(); onPrev(); }}
+            >
+              <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
+            </Button>
+          )}
+          {onNext && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute -right-4 sm:-right-20 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-white/20 sm:bg-white/10 hover:bg-white/30 sm:hover:bg-white/20 text-white border border-white/20 backdrop-blur-md transition-all hover:scale-110 active:scale-95 pointer-events-auto z-50"
+              onClick={(e) => { e.stopPropagation(); onNext(); }}
+            >
+              <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
+            </Button>
+          )}
+        </div>
+
         <div className="p-6 border-b border-border/50 bg-muted/20">
           <DialogTitle className="text-2xl font-display font-bold text-foreground flex gap-3 items-center">
             <Briefcase className="w-6 h-6 text-primary" /> Task Details
           </DialogTitle>
         </div>
         <div className="p-6 md:p-8 space-y-8 overflow-y-auto max-h-[85vh] custom-scrollbar">
-          {/* Board Folder / Project Categorization */}
-          <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Folder className="w-5 h-5 text-primary" />
-              <div className="space-y-0.5">
-                <p className="text-[10px] uppercase tracking-widest font-black text-primary/60">Project / Folder</p>
-                <div className="relative min-w-[180px]">
-                  <Select value={boardFolder} onValueChange={setBoardFolder}>
-                    <SelectTrigger className="bg-transparent border-none p-0 h-auto text-sm font-bold shadow-none focus:ring-0 [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-primary/50 hover:[&>svg]:text-primary transition-colors">
-                      <SelectValue placeholder="Uncategorized" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl border-border/50 shadow-xl">
-                      <SelectItem value="none" className="text-muted-foreground italic font-medium">Uncategorized</SelectItem>
-                      {availableFolders.map(f => (
-                        <SelectItem key={f} value={f} className="font-bold">{f}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+          {/* Top Section: Project and Description */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Board Folder / Project Categorization */}
+            <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl flex items-center justify-between gap-4 h-full">
+              <div className="flex items-center gap-3">
+                <Folder className="w-5 h-5 text-primary" />
+                <div className="space-y-0.5">
+                  <p className="text-[10px] uppercase tracking-widest font-black text-primary/60">Project / Folder</p>
+                  <div className="relative min-w-[150px]">
+                    <Select value={boardFolder} onValueChange={setBoardFolder}>
+                      <SelectTrigger className="bg-transparent border-none p-0 h-auto text-sm font-bold shadow-none focus:ring-0 [&>svg]:w-4 [&>svg]:h-4 [&>svg]:text-primary/50 hover:[&>svg]:text-primary transition-colors">
+                        <SelectValue placeholder="Uncategorized" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-border/50 shadow-xl">
+                        <SelectItem value="none" className="text-muted-foreground italic font-medium">Uncategorized</SelectItem>
+                        {availableFolders.map(f => (
+                          <SelectItem key={f} value={f} className="font-bold">{f}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
+              <p className="text-[9px] text-muted-foreground font-medium italic text-right leading-tight">Edit to<br/>move</p>
             </div>
-            <p className="text-[10px] text-muted-foreground font-medium italic">Edit to move task</p>
+
+            {/* Description Summary */}
+            <div className="bg-muted/20 p-4 rounded-2xl border border-border/50 h-full">
+              <h4 className="text-[10px] uppercase tracking-widest text-primary/60 font-black mb-1">Description</h4>
+              <p className="text-foreground/90 text-[13px] whitespace-pre-wrap line-clamp-2 leading-relaxed">
+                {task.description || "No description provided"}
+              </p>
+            </div>
           </div>
 
           {/* Folders Review View */}
@@ -950,7 +1135,7 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
                           className="absolute inset-0 w-full h-full object-contain"
                         />
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <Button variant="secondary" size="sm" onClick={() => window.open(url, '_blank')}>View Full Size</Button>
+                          <Button variant="secondary" size="sm" onClick={() => onPreview(proofLinks, proofLinks.indexOf(url))}>View Full Size</Button>
                         </div>
                       </div>
                     ))}
@@ -970,17 +1155,14 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
                       className="absolute inset-0 w-full h-full object-contain"
                     />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Button variant="secondary" onClick={() => window.open(url, '_blank')}>View Full Size</Button>
+                      <Button variant="secondary" onClick={() => onPreview(proofLinks, proofLinks.indexOf(url))}>View Full Size</Button>
                     </div>
                   </div>
                 ))}
               </div>
             )
           )}
-          <div className="bg-muted/20 p-5 rounded-[1.5rem] border border-border/50">
-            <h4 className="text-[11px] uppercase tracking-widest text-primary font-bold mb-2">Description</h4>
-            <p className="text-foreground/90 text-[15px] whitespace-pre-wrap">{task.description}</p>
-          </div>
+
           {isCompleted ? (
             <div className="bg-green-500/10 border border-green-500/20 p-5 rounded-[1.5rem]">
               <p className="text-green-700 dark:text-green-400 font-bold">Completed by {task.assignee}</p>
@@ -998,14 +1180,14 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
                         disabled={updateTask.isPending}
                         className="flex-1 h-11 rounded-xl font-bold text-sm bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-md shadow-orange-500/20"
                       >
-                        ✏️ Go for Change
+                        {updateTask.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "✏️ Go for Change"}
                       </Button>
                       <Button
                         onClick={() => updateTask.mutate({ id: task.id, updates: { status: "dont_go" } }, { onSuccess: () => { toast({ title: "Don't Go ❌", description: "Sir ne reject kela — Punarvichar kara!" }); onClose(); } })}
                         disabled={updateTask.isPending}
                         className="flex-1 h-11 rounded-xl font-bold text-sm bg-red-500 hover:bg-red-600 text-white border-0 shadow-md shadow-red-500/20"
                       >
-                        🚫 Don't Go
+                        {updateTask.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "🚫 Don't Go"}
                       </Button>
                     </div>
                   )}
@@ -1020,7 +1202,9 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
                       <p className="text-red-500 text-xs font-bold mt-1.5 ml-1">⚠ Please select your name</p>
                     )}
                   </div>
-                  <Button onClick={handleStartTask} className="w-full h-14 rounded-xl font-bold text-lg">Claim Task</Button>
+                   <Button onClick={handleStartTask} disabled={updateTask.isPending} className="w-full h-14 rounded-xl font-bold text-lg">
+                    {updateTask.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "Claim Task"}
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -1041,7 +1225,9 @@ function TaskModal({ task, members, onClose }: { task: Task; members: string[]; 
                     )}
                   </div>
                   <Textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Notes..." className="rounded-xl h-24" />
-                  <Button onClick={handleUpdateStatus} className="w-full h-14 rounded-xl font-bold text-lg">Save Changes</Button>
+                  <Button onClick={handleUpdateStatus} disabled={updateTask.isPending} className="w-full h-14 rounded-xl font-bold text-lg">
+                    {updateTask.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "Save Changes"}
+                  </Button>
                 </div>
               )}
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ClipboardList, Building2, Briefcase, SearchX, BarChart3, Lock, User } from "lucide-react";
+import { ClipboardList, Building2, Briefcase, SearchX, BarChart3, Lock, User, Loader2 } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 
@@ -136,10 +136,17 @@ export default function Home() {
               />
               <Button 
                 onClick={handleUnlock}
+                disabled={verifyCode.isPending}
                 className="w-full h-14 font-bold text-lg rounded-2xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 group"
               >
-                Access Dashboard
-                <ClipboardList className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                {verifyCode.isPending ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <>
+                    Access Dashboard
+                    <ClipboardList className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </Button>
             </div>
             
