@@ -169,7 +169,7 @@ export default function CavesStudioDashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
                   key={assignee} 
-                  className="flex-shrink-0 w-[350px] sm:w-[400px] bg-card/60 backdrop-blur-sm border border-border/50 rounded-2xl flex flex-col h-fit max-h-[80vh]"
+                  className="flex-shrink-0 w-[88vw] xs:w-[340px] sm:w-[400px] bg-card/60 backdrop-blur-sm border border-border/50 rounded-2xl flex flex-col h-fit max-h-[80vh]"
                 >
                   <div className="p-5 border-b border-border/40 sticky top-0 bg-card/95 backdrop-blur-md rounded-t-2xl z-10 flex items-center justify-between">
                     <div>

@@ -89,6 +89,7 @@ export default function CompanyDetail() {
   const updateTask = useUpdateTask();
   const { toast } = useToast();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [authCode, setAuthCode] = useState("");
   const verifyCode = useVerifyCode();
@@ -313,23 +314,6 @@ export default function CompanyDetail() {
       },
       onError: (err: any) => {
         toast({ title: "Update Failed 💥", description: err.message || "Oops! The database blinked. Try again!", variant: "destructive" });
-      }
-    });
-  };
-
-  const handleDeleteTask = (task: Task) => {
-    if (!confirm("Are you sure you want to delete this task? This action cannot be undone.")) return;
-    
-    // We need the secret code for deletion too
-    const code = prompt("Enter secure code to delete:");
-    if (!code) return;
-
-    deleteTask.mutate({ id: task.id, secretCode: code }, {
-      onSuccess: () => {
-        toast({ title: "Task Deleted", description: "The task has been removed." });
-      },
-      onError: (err: any) => {
-        toast({ title: "Delete Failed 💥", description: err.message || "Whoops, couldn't delete that. The ghost of the task remains!", variant: "destructive" });
       }
     });
   };
@@ -672,7 +656,7 @@ export default function CompanyDetail() {
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                onClick={() => handleDeleteTask(task)}
+                                onClick={() => setTaskToDelete(task)}
                                 className="rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -924,6 +908,17 @@ export default function CompanyDetail() {
           )}
         </DialogContent>
       </Dialog>
+
+      {taskToDelete && (
+        <DeleteTaskDialog 
+          task={taskToDelete} 
+          onClose={() => setTaskToDelete(null)} 
+          onSuccess={() => {
+            toast({ title: "Task Deleted", description: "The task has been removed." });
+            setTaskToDelete(null);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -941,5 +936,67 @@ function DetailSkeleton() {
         ))}
       </div>
     </div>
+  );
+}
+
+function DeleteTaskDialog({ task, onClose, onSuccess }: { task: Task, onClose: () => void, onSuccess: () => void }) {
+  const deleteTask = useDeleteTask();
+  const [code, setCode] = useState("");
+  const { toast } = useToast();
+
+  const isAssigned = !!(task.assignee && task.assignee.trim() !== "");
+
+  const handleConfirm = () => {
+    if (isAssigned && !code) return;
+    deleteTask.mutate({ id: task.id, secretCode: isAssigned ? code : "" }, {
+      onSuccess: () => {
+        onSuccess();
+      },
+      onError: (err: any) => {
+        toast({ title: "Delete Failed 💥", description: err.message || "Whoops, couldn't delete that.", variant: "destructive" });
+      }
+    });
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="w-[90vw] sm:max-w-[400px] rounded-[2rem] border-border/50 bg-card p-6">
+        <div className="flex flex-col items-center text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center text-destructive">
+            <Trash2 className="w-8 h-8" />
+          </div>
+          <div>
+            <DialogTitle className="text-xl font-bold">Delete Task?</DialogTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              This will permanently remove this task.
+              {isAssigned ? (
+                <> This task is assigned to <span className="font-bold text-foreground">{task.assignee}</span>. Enter delete password to confirm.</>
+              ) : (
+                " Are you sure you want to delete this unassigned task?"
+              )}
+            </p>
+          </div>
+          {isAssigned && (
+            <Input 
+              type="password" 
+              placeholder="Enter Delete Password" 
+              value={code} 
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCode(e.target.value)}
+              className="h-12 rounded-xl text-center font-bold tracking-widest"
+            />
+          )}
+          <div className="flex w-full gap-3 pt-2">
+            <Button variant="ghost" className="flex-1 h-12 rounded-xl font-bold" onClick={onClose}>Cancel</Button>
+            <Button 
+              disabled={(isAssigned && !code) || deleteTask.isPending}
+              className="flex-1 h-12 rounded-xl bg-destructive hover:bg-destructive/90 text-white font-bold"
+              onClick={handleConfirm}
+            >
+              {deleteTask.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Delete"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

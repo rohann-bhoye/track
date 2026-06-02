@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Briefcase, CheckCircle2, Inbox, SearchX, Loader2, 
@@ -46,10 +46,11 @@ export default function WallxyDashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDropModal, setShowDropModal] = useState(false);
   const [pendingDropGroups, setPendingDropGroups] = useState<any[]>([]);
+  const [isPasting, setIsPasting] = useState(false);
 
   const { toast } = useToast();
 
-  const handleMagicUpload = async (files: File[]) => {
+  const handleMagicUpload = async (files: File[], fromPaste = false) => {
     if (files.length === 0 || !files[0].type.startsWith('image/')) {
       toast({ title: "Invalid file", description: "Please drop at least one image.", variant: "destructive" });
       return;
@@ -63,6 +64,7 @@ export default function WallxyDashboard() {
       return;
     }
 
+    if (fromPaste) setIsPasting(true);
     setIsUploading(true);
     setUploadProgress(0);
     
@@ -89,18 +91,49 @@ export default function WallxyDashboard() {
       }
 
       if (uploadedUrls.length > 0) {
-        setPendingDropGroups([{ folderName: "Batch Upload", urls: uploadedUrls }]);
+        setPendingDropGroups([{ folderName: fromPaste ? "Pasted Screenshots" : "Batch Upload", urls: uploadedUrls }]);
         setShowDropModal(true);
       }
     } catch (error: any) {
       toast({ title: "Upload Failed", description: error.message, variant: "destructive" });
     } finally {
       setIsUploading(false);
+      setIsPasting(false);
     }
   };
 
   const [pendingScreenshotGroups, setPendingScreenshotGroups] = useState<any[]>([]);
-  
+
+  // ── Global Ctrl+V paste handler ──────────────────────────────────────────────
+  useEffect(() => {
+    const handlePaste = async (e: ClipboardEvent) => {
+      // Don't intercept paste inside an input / textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return;
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      const imageFiles: File[] = [];
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith("image/")) {
+          const file = items[i].getAsFile();
+          if (file) imageFiles.push(file);
+        }
+      }
+
+      if (imageFiles.length === 0) return;
+
+      // Upload images and open the drop modal
+      await handleMagicUpload(imageFiles, true);
+    };
+
+    window.addEventListener("paste", handlePaste as unknown as EventListener);
+    return () => window.removeEventListener("paste", handlePaste as unknown as EventListener);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showCreateModal, showDropModal]);
+  // ─────────────────────────────────────────────────────────────────────────────
+
   // Merge members from database with anyone who already has a task
   const members = useMemo(() => {
     const list = new Set<string>();
@@ -290,9 +323,11 @@ export default function WallxyDashboard() {
             >
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
               <div className="flex-1 space-y-1">
-                <p className="text-sm font-bold">Uploading Discreetly...</p>
+                <p className="text-sm font-bold">
+                  {isPasting ? "📋 Pasting Screenshot..." : "Uploading Discreetly..."}
+                </p>
                 <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-primary transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                  <div className="h-full bg-primary animate-pulse w-full" />
                 </div>
               </div>
             </motion.div>
@@ -635,7 +670,7 @@ function DeleteMemberDialog({ member, onClose }: { member: {id: string, name: st
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[400px] rounded-[2rem] border-border/50 bg-card p-6">
+      <DialogContent className="w-[90vw] sm:max-w-[400px] rounded-[2rem] border-border/50 bg-card p-6">
         <div className="flex flex-col items-center text-center space-y-4">
           <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center text-destructive">
             <Trash2 className="w-8 h-8" />
@@ -672,11 +707,13 @@ function DeleteTaskDialog({ task, onClose }: { task: Task, onClose: () => void }
   const [code, setCode] = useState("");
   const { toast } = useToast();
 
+  const isAssigned = !!(task.assignee && task.assignee.trim() !== "");
+
   const handleConfirm = () => {
-    if (!code) return;
-    deleteTask.mutate({ id: task.id, secretCode: code }, {
+    if (isAssigned && !code) return;
+    deleteTask.mutate({ id: task.id, secretCode: isAssigned ? code : "" }, {
       onSuccess: () => {
-        toast({ title: "Task Removed 🔐", description: "Master Code Accepted. Evidence Deleted! 🕵️‍♂️" });
+        toast({ title: "Task Removed 🔐", description: isAssigned ? "Evidence Deleted! 🕵️‍♂️" : "Task Deleted Successfully." });
         onClose();
       },
       onError: (err: any) => {
@@ -687,26 +724,35 @@ function DeleteTaskDialog({ task, onClose }: { task: Task, onClose: () => void }
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[400px] rounded-[2rem] border-border/50 bg-card p-6">
+      <DialogContent className="w-[90vw] sm:max-w-[400px] rounded-[2rem] border-border/50 bg-card p-6">
         <div className="flex flex-col items-center text-center space-y-4">
           <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center text-destructive">
             <Trash2 className="w-8 h-8" />
           </div>
           <div>
             <DialogTitle className="text-xl font-bold">Delete Task?</DialogTitle>
-            <p className="text-sm text-muted-foreground mt-1">This will permanently remove this task from the board. Enter master code to confirm.</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              This will permanently remove this task from the board.
+              {isAssigned ? (
+                <> This task is assigned to <span className="font-bold text-foreground">{task.assignee}</span>. Enter delete password to confirm.</>
+              ) : (
+                " Are you sure you want to delete this unassigned task?"
+              )}
+            </p>
           </div>
-          <Input 
-            type="password" 
-            placeholder="Enter Master Code" 
-            value={code} 
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCode(e.target.value)}
-            className="h-12 rounded-xl text-center font-bold tracking-widest"
-          />
+          {isAssigned && (
+            <Input 
+              type="password" 
+              placeholder="Enter Delete Password" 
+              value={code} 
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCode(e.target.value)}
+              className="h-12 rounded-xl text-center font-bold tracking-widest"
+            />
+          )}
           <div className="flex w-full gap-3 pt-2">
             <Button variant="ghost" className="flex-1 h-12 rounded-xl font-bold" onClick={onClose}>Cancel</Button>
             <Button 
-              disabled={!code || deleteTask.isPending}
+              disabled={(isAssigned && !code) || deleteTask.isPending}
               className="flex-1 h-12 rounded-xl bg-destructive hover:bg-destructive/90 text-white font-bold"
               onClick={handleConfirm}
             >
@@ -1240,15 +1286,54 @@ function TaskModal({
 
 function CreateTaskModal({ onClose, folders = [], initialGroups = [] }: { onClose: () => void; folders?: string[]; initialGroups?: any[] }) {
   const createTask = useCreateWallxyTask();
+  const createFolder = useCreateBoardFolder();
   const { toast } = useToast();
   const [description, setDescription] = useState("");
   const [screenshotGroups, setScreenshotGroups] = useState<any[]>(initialGroups.length > 0 ? initialGroups : [{ folderName: "Screenshots", urls: [] }]);
   const [boardFolder, setBoardFolder] = useState("");
   const [errors, setErrors] = useState<Record<string, boolean>>({});
 
+  // Inline new-category state
+  const [showNewCategory, setShowNewCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const newCategoryInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (initialGroups.length > 0) setScreenshotGroups(initialGroups);
   }, [initialGroups]);
+
+  // Auto-focus the input when it appears
+  useEffect(() => {
+    if (showNewCategory) {
+      setTimeout(() => newCategoryInputRef.current?.focus(), 50);
+    }
+  }, [showNewCategory]);
+
+  const handleSelectChange = (val: string) => {
+    if (val === "__new__") {
+      setShowNewCategory(true);
+    } else {
+      setShowNewCategory(false);
+      setBoardFolder(val);
+    }
+  };
+
+  const handleCreateCategory = () => {
+    const name = newCategoryName.trim();
+    if (!name) return;
+
+    createFolder.mutate({ name, companyName: "Wallxy" }, {
+      onSuccess: () => {
+        setBoardFolder(name);
+        setShowNewCategory(false);
+        setNewCategoryName("");
+        toast({ title: "Category Created! 🗂️", description: `"${name}" is ready to use.` });
+      },
+      onError: (err: any) => {
+        toast({ title: "Failed", description: err.message, variant: "destructive" });
+      }
+    });
+  };
 
   const handleSubmit = () => {
     const newErrors: Record<string, boolean> = {};
@@ -1279,9 +1364,12 @@ function CreateTaskModal({ onClose, folders = [], initialGroups = [] }: { onClos
     });
   };
 
+  // Display value for the select trigger
+  const selectDisplayValue = showNewCategory ? "__new__" : (boardFolder || "none");
+
   return (
     <Dialog open onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-[500px] border border-border/50 bg-card rounded-[2rem] overflow-hidden p-0">
+      <DialogContent className="w-[95vw] sm:max-w-[500px] border border-border/50 bg-card rounded-[2rem] overflow-hidden p-0">
         <div className="p-6 border-b border-border/50 bg-muted/20">
           <DialogTitle className="text-xl font-bold">New Task</DialogTitle>
         </div>
@@ -1296,22 +1384,80 @@ function CreateTaskModal({ onClose, folders = [], initialGroups = [] }: { onClos
             />
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             <label className="text-[11px] uppercase tracking-widest text-primary font-bold ml-1">Project / Category</label>
-            <Select value={boardFolder || "none"} onValueChange={setBoardFolder}>
+
+            <Select value={selectDisplayValue} onValueChange={handleSelectChange}>
               <SelectTrigger className="h-12 rounded-2xl bg-muted/5">
-                <SelectValue placeholder="Select Project" />
+                <SelectValue>
+                  {showNewCategory
+                    ? <span className="text-primary font-bold flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /> New Category</span>
+                    : boardFolder && boardFolder !== "none"
+                      ? boardFolder
+                      : "Uncategorized"
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Uncategorized</SelectItem>
                 {folders.map(f => (
                   <SelectItem key={f} value={f}>{f}</SelectItem>
                 ))}
+                {/* Divider */}
+                <div className="my-1 border-t border-border/40" />
+                <SelectItem value="__new__" className="text-primary font-bold">
+                  <span className="flex items-center gap-1.5">
+                    <Plus className="w-3.5 h-3.5" /> New Category
+                  </span>
+                </SelectItem>
               </SelectContent>
             </Select>
-            <Link href="/wallxy/new" className="inline-flex items-center gap-1.5 text-[10px] text-primary hover:underline font-bold ml-1">
-              <Plus className="w-3 h-3" /> Create New Folder
-            </Link>
+
+            {/* Inline new category input — slides in when "+ New Category" is selected */}
+            <AnimatePresence>
+              {showNewCategory && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, y: -4 }}
+                  animate={{ opacity: 1, height: "auto", y: 0 }}
+                  exit={{ opacity: 0, height: 0, y: -4 }}
+                  transition={{ duration: 0.18 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-2xl">
+                    <Input
+                      ref={newCategoryInputRef}
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { e.preventDefault(); handleCreateCategory(); }
+                        if (e.key === "Escape") { setShowNewCategory(false); setNewCategoryName(""); }
+                      }}
+                      placeholder="Category name..."
+                      className="h-9 rounded-xl border-primary/20 bg-background text-sm font-medium flex-1 focus-visible:ring-primary/30"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={!newCategoryName.trim() || createFolder.isPending}
+                      onClick={handleCreateCategory}
+                      className="h-9 px-4 rounded-xl font-bold text-xs shrink-0"
+                    >
+                      {createFolder.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Create"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground shrink-0"
+                      onClick={() => { setShowNewCategory(false); setNewCategoryName(""); }}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground/60 mt-1.5 ml-1">Press <kbd className="px-1 py-0.5 rounded bg-muted text-[9px] font-mono border border-border/50">Enter</kbd> to create · <kbd className="px-1 py-0.5 rounded bg-muted text-[9px] font-mono border border-border/50">Esc</kbd> to cancel</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <div className="space-y-4 pt-2">
@@ -1350,7 +1496,7 @@ function DeleteFolderDialog({ folder, onClose }: { folder: BoardFolder, onClose:
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[400px] border-border/50 bg-card p-6">
+      <DialogContent className="w-[90vw] sm:max-w-[400px] border-border/50 bg-card p-6 rounded-[2rem]">
         <DialogTitle className="text-xl font-bold flex items-center gap-2 text-destructive">
           <Trash2 className="w-5 h-5" /> Delete Category
         </DialogTitle>

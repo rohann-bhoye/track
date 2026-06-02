@@ -279,3 +279,23 @@ export class FirebaseStorage implements IStorage {
 
 export const storage = new FirebaseStorage("tasks");
 export const teamStorage = new FirebaseStorage("team_tasks");
+
+export async function getAssignedDeletePassword(): Promise<string> {
+  try {
+    const { getDoc, setDoc, doc } = await import("firebase/firestore");
+    const docRef = doc(db, "settings", "security");
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      if (data && data.assignedDeletePassword) {
+        return data.assignedDeletePassword;
+      }
+    }
+    // If it doesn't exist, initialize with "caveswallxy"
+    await setDoc(docRef, { assignedDeletePassword: "caveswallxy" });
+    return "caveswallxy";
+  } catch (err) {
+    console.error("Error fetching/initializing assignedDeletePassword:", err);
+    return "caveswallxy";
+  }
+}

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { UploadCloud, X, Loader2, Image as ImageIcon, ExternalLink, FolderPlus, Trash, ChevronRight, ChevronDown, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ export function ScreenshotUpload({ value = [], onChange, className }: Screenshot
   const [isDragging, setIsDragging] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, number>>({});
   const [selectedFolderIdx, setSelectedFolderIdx] = useState<number>(0);
+  const [pasteFlash, setPasteFlash] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -30,31 +31,7 @@ export function ScreenshotUpload({ value = [], onChange, className }: Screenshot
     }
   }, [value, onChange]);
 
-  const addFolder = () => {
-    const newFolder: ScreenshotGroup = { 
-      folderName: `New Folder ${value.length + 1}`, 
-      urls: [] 
-    };
-    onChange([...value, newFolder]);
-    setSelectedFolderIdx(value.length);
-  };
-
-  const removeFolder = (idx: number) => {
-    const next = [...value];
-    next.splice(idx, 1);
-    onChange(next);
-    if (selectedFolderIdx >= next.length) {
-      setSelectedFolderIdx(Math.max(0, next.length - 1));
-    }
-  };
-
-  const renameFolder = (idx: number, newName: string) => {
-    const next = [...value];
-    next[idx] = { ...next[idx], folderName: newName };
-    onChange(next);
-  };
-
-  const handleUpload = async (files: FileList | File[], folderIdx: number) => {
+  const handleUpload = useCallback(async (files: FileList | File[], folderIdx: number) => {
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
@@ -106,6 +83,54 @@ export function ScreenshotUpload({ value = [], onChange, className }: Screenshot
         }, 500);
       }
     }
+  }, [value, onChange, toast]);
+
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      const imageFiles: File[] = [];
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith("image/")) {
+          const file = items[i].getAsFile();
+          if (file) imageFiles.push(file);
+        }
+      }
+
+      if (imageFiles.length > 0) {
+        setPasteFlash(true);
+        setTimeout(() => setPasteFlash(false), 700);
+        handleUpload(imageFiles, selectedFolderIdx);
+      }
+    };
+
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, [selectedFolderIdx, handleUpload]);
+
+  const addFolder = () => {
+    const newFolder: ScreenshotGroup = { 
+      folderName: `New Folder ${value.length + 1}`, 
+      urls: [] 
+    };
+    onChange([...value, newFolder]);
+    setSelectedFolderIdx(value.length);
+  };
+
+  const removeFolder = (idx: number) => {
+    const next = [...value];
+    next.splice(idx, 1);
+    onChange(next);
+    if (selectedFolderIdx >= next.length) {
+      setSelectedFolderIdx(Math.max(0, next.length - 1));
+    }
+  };
+
+  const renameFolder = (idx: number, newName: string) => {
+    const next = [...value];
+    next[idx] = { ...next[idx], folderName: newName };
+    onChange(next);
   };
 
   const removeImage = (folderIdx: number, imgIdx: number) => {
@@ -120,28 +145,22 @@ export function ScreenshotUpload({ value = [], onChange, className }: Screenshot
 
   return (
     <div className={cn("space-y-4", className)}>
-      <div className="flex items-center justify-between mb-2">
+      <div className="mb-2">
         <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-          <FolderOpen className="w-3.5 h-3.5 text-primary" /> Screenshot Folders
+          <FolderOpen className="w-3.5 h-3.5 text-primary" /> Screenshots
         </label>
-        <Button 
-          type="button" 
-          variant="outline" 
-          size="sm" 
-          className="h-7 text-[10px] bg-background/50 border-primary/20 hover:bg-primary/5 text-primary"
-          onClick={addFolder}
-        >
-          <FolderPlus className="w-3.5 h-3.5 mr-1" /> New Folder
-        </Button>
       </div>
 
       <div className="space-y-3">
         {value.map((group, gIdx) => (
           <div key={gIdx} className={cn(
             "rounded-xl border transition-all overflow-hidden",
-            selectedFolderIdx === gIdx ? "border-primary/30 bg-primary/5" : "border-border/60 bg-muted/20"
+            selectedFolderIdx === gIdx
+              ? pasteFlash
+                ? "border-green-500/60 bg-green-500/10 shadow-md shadow-green-500/10"
+                : "border-primary/30 bg-primary/5"
+              : "border-border/60 bg-muted/20"
           )}>
-            {/* Folder Header */}
             <div 
               className="px-3 py-2 flex items-center gap-2 cursor-pointer group hover:bg-primary/5"
               onClick={() => setSelectedFolderIdx(gIdx)}
@@ -169,10 +188,8 @@ export function ScreenshotUpload({ value = [], onChange, className }: Screenshot
               </div>
             </div>
 
-            {/* Folder Content */}
             {selectedFolderIdx === gIdx && (
               <div className="p-3 pt-0 space-y-3">
-                {/* Images Grid */}
                 {group.urls.length > 0 && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
                     {group.urls.map((url, iIdx) => (
@@ -187,18 +204,36 @@ export function ScreenshotUpload({ value = [], onChange, className }: Screenshot
                   </div>
                 )}
 
-                {/* Upload Area for this folder */}
                 <label className={cn(
-                  "relative flex flex-col items-center justify-center w-full min-h-[60px] rounded-lg border-2 border-dashed transition-all cursor-pointer",
-                  "border-muted-foreground/20 hover:border-primary/50 hover:bg-background/50"
+                  "relative flex flex-col items-center justify-center w-full min-h-[80px] rounded-lg border-2 border-dashed transition-all cursor-pointer",
+                  pasteFlash && selectedFolderIdx === gIdx
+                    ? "border-green-500/60 bg-green-500/10"
+                    : "border-muted-foreground/20 hover:border-primary/50 hover:bg-background/50"
                 )}>
-                  <div className="flex flex-col items-center justify-center p-3 text-center">
+                  <div className="flex flex-col items-center justify-center p-3 text-center gap-1.5">
                     {isUploading && selectedFolderIdx === gIdx ? (
-                      <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                        <span className="text-[10px] font-bold text-primary">Uploading...</span>
+                      </div>
+                    ) : pasteFlash && selectedFolderIdx === gIdx ? (
+                      <p className="text-[11px] font-bold text-green-600">📋 Pasting screenshot...</p>
                     ) : (
-                      <p className="text-[10px] font-medium text-muted-foreground">
-                        <span className="text-primary font-bold">Add to {group.folderName}</span>
-                      </p>
+                      <>
+                        <p className="text-[10px] font-medium text-muted-foreground">
+                          <span className="text-primary font-bold">Click to browse</span> or drag & drop
+                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <kbd className="inline-flex items-center px-1.5 py-0.5 rounded border border-border/70 bg-muted/60 text-[9px] font-mono font-bold text-muted-foreground shadow-sm">
+                            Ctrl
+                          </kbd>
+                          <span className="text-[9px] text-muted-foreground/50 font-bold">+</span>
+                          <kbd className="inline-flex items-center px-1.5 py-0.5 rounded border border-border/70 bg-muted/60 text-[9px] font-mono font-bold text-muted-foreground shadow-sm">
+                            V
+                          </kbd>
+                          <span className="text-[9px] text-muted-foreground/50">to paste screenshot</span>
+                        </div>
+                      </>
                     )}
                   </div>
                   <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => e.target.files && handleUpload(e.target.files, gIdx)} />

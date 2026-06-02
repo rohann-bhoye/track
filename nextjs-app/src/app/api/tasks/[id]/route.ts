@@ -41,11 +41,27 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   try {
     const { id } = await params;
     const body = await req.json();
-    const { secretCode } = deleteTaskRequestSchema.parse(body);
+    const { secretCode } = z.object({ secretCode: z.string().optional().nullable() }).parse(body);
 
-    const expectedCode = process.env.SECRET_CODE || "task123";
-    if (secretCode !== expectedCode) {
-      return NextResponse.json({ message: "Invalid secret code." }, { status: 401 });
+    // 1. Fetch the task from Firestore to check if it has an assignee
+    const { getDoc, doc } = await import("firebase/firestore");
+    const { db } = await import("@/lib/firebase");
+    const taskDoc = await getDoc(doc(db, "tasks", id));
+
+    if (!taskDoc.exists()) {
+      return NextResponse.json({ message: "Task not found" }, { status: 404 });
+    }
+
+    const taskData = taskDoc.data();
+    const hasAssignee = taskData && taskData.assignee && taskData.assignee.trim() !== "";
+
+    if (hasAssignee) {
+      const { getAssignedDeletePassword } = await import("@/lib/storage");
+      const expectedCode = await getAssignedDeletePassword();
+
+      if (secretCode !== expectedCode) {
+        return NextResponse.json({ message: "Invalid delete password for assigned task." }, { status: 401 });
+      }
     }
 
     await storage.deleteTask(id);
