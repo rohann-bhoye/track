@@ -1053,7 +1053,7 @@ function TaskModal({
     }
     setErrors({});
 
-    const updates: any = { status, comment, boardFolder: boardFolder === "none" ? null : boardFolder };
+    const updates: any = { status, comment, boardFolder: boardFolder === "none" ? null : boardFolder, assignee };
     if (status === "in_list") {
       updates.assignee = null;
       // If Sir already marked this "Go for Change", preserve that status
@@ -1254,7 +1254,22 @@ function TaskModal({
                 </div>
               ) : (
                 <div className="space-y-3">
+                  {/* Reassign To */}
                   <div>
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-black mb-1.5 ml-1">Assigned To</p>
+                    <Select value={assignee} onValueChange={setAssignee}>
+                      <SelectTrigger className="h-14 rounded-xl font-bold border-primary/30 bg-primary/5">
+                        <SelectValue placeholder="Select assignee" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {members.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-black mb-1.5 ml-1">Status</p>
                     <Select value={status} onValueChange={(v) => { setStatus(v); setErrors(prev => ({ ...prev, status: false })); }}>
                       <SelectTrigger className={cn("h-14 rounded-xl font-bold", errors.status && "border-red-500 border-2 ring-2 ring-red-500/20")}>
                         <SelectValue placeholder="Status" />
