@@ -21,7 +21,7 @@ export function ScreenshotUpload({ value = [], onChange, className }: Screenshot
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, number>>({});
   const [selectedFolderIdx, setSelectedFolderIdx] = useState<number>(0);
   const [pasteFlash, setPasteFlash] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const { toast } = useToast();
 
   // If no folders exist, create a default one
@@ -229,10 +229,14 @@ export function ScreenshotUpload({ value = [], onChange, className }: Screenshot
                       <p className="text-[11px] font-bold text-green-600">📋 Pasting screenshot...</p>
                     ) : (
                       <>
-                        <span className="inline-flex sm:hidden items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold shadow-md shadow-primary/20 hover:bg-primary/90 transition-all duration-300">
+                        <button
+                          type="button"
+                          className="inline-flex sm:hidden items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold shadow-md shadow-primary/20 active:scale-95 transition-all duration-200"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); fileInputRefs.current[gIdx]?.click(); }}
+                        >
                           <UploadCloud className="w-4 h-4" />
                           Add Media
-                        </span>
+                        </button>
                         <p className="text-[10px] font-medium text-muted-foreground hidden sm:block">
                           <span className="text-primary font-bold">Click to browse</span> or drag & drop
                         </p>
@@ -249,7 +253,14 @@ export function ScreenshotUpload({ value = [], onChange, className }: Screenshot
                       </>
                     )}
                   </div>
-                  <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => e.target.files && handleUpload(e.target.files, gIdx)} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    ref={(el) => { fileInputRefs.current[gIdx] = el; }}
+                    onChange={(e) => e.target.files && handleUpload(e.target.files, gIdx)}
+                  />
                 </label>
 
                 {/* Manual Link Input */}
