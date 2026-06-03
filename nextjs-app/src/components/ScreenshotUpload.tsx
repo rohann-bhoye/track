@@ -145,10 +145,19 @@ export function ScreenshotUpload({ value = [], onChange, className }: Screenshot
 
   return (
     <div className={cn("space-y-4", className)}>
-      <div className="mb-2">
+      <div className="flex items-center justify-between mb-2">
         <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
           <FolderOpen className="w-3.5 h-3.5 text-primary" /> Screenshots
         </label>
+        <Button 
+          type="button" 
+          variant="outline" 
+          size="sm" 
+          className="h-7 text-[10px] bg-background/50 border-primary/20 hover:bg-primary/5 text-primary rounded-lg"
+          onClick={addFolder}
+        >
+          <FolderPlus className="w-3.5 h-3.5 mr-1" /> New Folder
+        </Button>
       </div>
 
       <div className="space-y-3">
@@ -220,10 +229,14 @@ export function ScreenshotUpload({ value = [], onChange, className }: Screenshot
                       <p className="text-[11px] font-bold text-green-600">📋 Pasting screenshot...</p>
                     ) : (
                       <>
-                        <p className="text-[10px] font-medium text-muted-foreground">
+                        <span className="inline-flex sm:hidden items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold shadow-md shadow-primary/20 hover:bg-primary/90 transition-all duration-300">
+                          <UploadCloud className="w-4 h-4" />
+                          Add Media
+                        </span>
+                        <p className="text-[10px] font-medium text-muted-foreground hidden sm:block">
                           <span className="text-primary font-bold">Click to browse</span> or drag & drop
                         </p>
-                        <div className="flex items-center gap-1.5">
+                        <div className="hidden sm:flex items-center gap-1.5">
                           <kbd className="inline-flex items-center px-1.5 py-0.5 rounded border border-border/70 bg-muted/60 text-[9px] font-mono font-bold text-muted-foreground shadow-sm">
                             Ctrl
                           </kbd>
@@ -238,6 +251,27 @@ export function ScreenshotUpload({ value = [], onChange, className }: Screenshot
                   </div>
                   <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => e.target.files && handleUpload(e.target.files, gIdx)} />
                 </label>
+
+                {/* Manual Link Input */}
+                <div className="flex items-center gap-2 pt-1">
+                  <Input 
+                    placeholder="Or paste image URL & press Enter..." 
+                    className="h-8 text-xs bg-background/50 border-muted-foreground/20 focus-visible:ring-primary/50 rounded-lg flex-1"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const val = e.currentTarget.value.trim();
+                        if (val) {
+                          const nextGroups = [...value];
+                          nextGroups[gIdx].urls.push(val);
+                          onChange(nextGroups);
+                          e.currentTarget.value = '';
+                          toast({ title: "Link Added", description: "Image URL added to folder." });
+                        }
+                      }
+                    }}
+                  />
+                </div>
               </div>
             )}
           </div>
