@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { ClipboardList, Building2, Briefcase, SearchX, BarChart3, Lock, User, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ClipboardList, Building2, Briefcase, SearchX, BarChart3, Lock, Loader2, ChevronsDown } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 
@@ -23,8 +23,23 @@ export default function Home() {
   const [masterCode, setMasterCode] = useState("");
   const { data: tasks, isLoading, isError } = useTasks();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
   const { toast } = useToast();
   const verifyCode = useVerifyCode();
+
+  // Track scroll position to show/hide scroll-to-bottom button
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+      setShowScrollBtn(distanceFromBottom > 200);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // run once on mount
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Handle mounting and session persistence (with 1-hour expiry)
   useEffect(() => {
@@ -305,6 +320,25 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      {/* Scroll to Bottom floating button */}
+      <AnimatePresence>
+        {showScrollBtn && (
+          <motion.button
+            key="scroll-btn"
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            onClick={() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" })}
+            className="fixed bottom-8 right-8 z-50 flex items-center gap-2 bg-primary text-primary-foreground px-4 py-3 rounded-2xl shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-105 active:scale-95 transition-all duration-200 font-bold text-sm"
+            aria-label="Scroll to bottom"
+          >
+            <ChevronsDown className="w-4 h-4 animate-bounce" />
+            Scroll Down
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1152,7 +1152,7 @@ function TaskModal({
             {/* Description Summary */}
             <div className="bg-muted/20 p-4 rounded-2xl border border-border/50 h-full">
               <h4 className="text-[10px] uppercase tracking-widest text-primary/60 font-black mb-1">Description</h4>
-              <p className="text-foreground/90 text-[13px] whitespace-pre-wrap line-clamp-2 leading-relaxed">
+              <p className="text-foreground/90 text-[13px] whitespace-pre-wrap leading-relaxed">
                 {task.description || "No description provided"}
               </p>
             </div>
