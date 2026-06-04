@@ -215,6 +215,13 @@ export default function WallxyDashboard() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center text-foreground font-sans selection:bg-primary/30">
+      {/* Testing Purpose Notice */}
+      <div className="fixed top-3 right-3 z-[9999] flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 shadow-sm pointer-events-none select-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block" />
+        <span className="text-[11px] font-semibold text-amber-600 tracking-wide uppercase whitespace-nowrap">
+          For Testing Purpose Only
+        </span>
+      </div>
       <div className="fixed top-0 left-0 w-full h-[400px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none -z-10" />
       <div className="fixed top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[120px] pointer-events-none -z-10" />
 
