@@ -1015,7 +1015,7 @@ function TaskModal({
   const [status, setStatus] = useState(task.status || "in_progress");
   const [boardFolder, setBoardFolder] = useState<string>(task.boardFolder || "none");
   const [errors, setErrors] = useState<Record<string, boolean>>({});
-  const [lastAction, setLastAction] = useState<{ prevStatus: string; label: string } | null>(null);
+  const [lastAction, setLastAction] = useState<{ prevStatus: string | null | undefined; label: string } | null>(null);
 
   const handleReviewAction = (newStatus: "go_for_change" | "dont_go", label: string) => {
     const prevStatus = task.status; // remember what it was before
@@ -1033,7 +1033,7 @@ function TaskModal({
   const handleUndo = () => {
     if (!lastAction) return;
     updateTask.mutate(
-      { id: task.id, updates: { status: lastAction.prevStatus as any } },
+      { id: task.id, updates: { status: (lastAction.prevStatus ?? "in_list") as any } },
       {
         onSuccess: () => {
           toast({ title: "Undone ✅", description: "Status reverted back." });
@@ -1271,14 +1271,16 @@ function TaskModal({
                           {updateTask.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "🚫 Don't Go"}
                         </Button>
                       </div>
-                      {/* Undo — permanent after click, stays until undone or modal closes */}
+                      {/* Status change label + Undo — permanent after click */}
                       {lastAction && (
-                        <div className="flex items-center justify-center gap-1.5 pt-0.5">
-                          <span className="text-[11px] text-muted-foreground">Clicked by mistake?</span>
+                        <div className="flex items-center justify-between gap-2 px-1 pt-1">
+                          <span className="text-[11px] text-muted-foreground">
+                            ✓ Status set to <span className="font-semibold text-foreground">{lastAction.label}</span>
+                          </span>
                           <button
                             onClick={handleUndo}
                             disabled={updateTask.isPending}
-                            className="text-[11px] font-bold text-primary underline underline-offset-2 hover:opacity-70 transition-opacity disabled:opacity-40"
+                            className="text-[11px] font-bold text-primary underline underline-offset-2 hover:opacity-70 transition-opacity disabled:opacity-40 shrink-0"
                           >
                             {updateTask.isPending ? "Reverting…" : "Undo"}
                           </button>
