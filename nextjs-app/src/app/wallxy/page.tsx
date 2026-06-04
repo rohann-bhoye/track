@@ -215,8 +215,8 @@ export default function WallxyDashboard() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center text-foreground font-sans selection:bg-primary/30">
-      {/* Testing Purpose Notice — desktop only, avoids browser chrome overlap */}
-      <div className="hidden md:flex fixed top-4 right-16 z-[9999] items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 shadow-sm pointer-events-none select-none">
+      {/* Testing Purpose Notice — desktop only, bottom-right */}
+      <div className="hidden md:flex fixed bottom-4 right-4 z-[9999] items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 shadow-sm pointer-events-none select-none">
         <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block" />
         <span className="text-[11px] font-semibold text-amber-600 tracking-wide uppercase whitespace-nowrap">
           For Testing Purpose Only
