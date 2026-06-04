@@ -1015,40 +1015,32 @@ function TaskModal({
   const [status, setStatus] = useState(task.status || "in_progress");
   const [boardFolder, setBoardFolder] = useState<string>(task.boardFolder || "none");
   const [errors, setErrors] = useState<Record<string, boolean>>({});
-  const [undoPending, setUndoPending] = useState<{ status: string; label: string; timer: ReturnType<typeof setTimeout> } | null>(null);
+  const [lastAction, setLastAction] = useState<{ prevStatus: string; label: string } | null>(null);
 
   const handleReviewAction = (newStatus: "go_for_change" | "dont_go", label: string) => {
-    // Cancel any existing pending undo
-    if (undoPending) {
-      clearTimeout(undoPending.timer);
-      setUndoPending(null);
-    }
-    // Show undo toast — user has 5 seconds to cancel
-    toast({
-      title: `${label} — Undo?`,
-      description: "Clicked by mistake? You have 5 seconds to undo.",
-    });
-    const timer = setTimeout(() => {
-      updateTask.mutate(
-        { id: task.id, updates: { status: newStatus } },
-        {
-          onSuccess: () => {
-            toast({ title: newStatus === "go_for_change" ? "Go for Change! 🔄" : "Don't Go ❌", description: newStatus === "go_for_change" ? "Sir ne review kela — Change kara!" : "Sir ne reject kela — Punarvichar kara!" });
-            onClose();
-          },
-        }
-      );
-      setUndoPending(null);
-    }, 5000);
-    setUndoPending({ status: newStatus, label, timer });
+    const prevStatus = task.status; // remember what it was before
+    updateTask.mutate(
+      { id: task.id, updates: { status: newStatus } },
+      {
+        onSuccess: () => {
+          toast({ title: `${label} saved!`, description: "Click Undo below to revert." });
+          setLastAction({ prevStatus, label });
+        },
+      }
+    );
   };
 
   const handleUndo = () => {
-    if (undoPending) {
-      clearTimeout(undoPending.timer);
-      setUndoPending(null);
-      toast({ title: "Undone ✅", description: "Action cancelled — no changes made." });
-    }
+    if (!lastAction) return;
+    updateTask.mutate(
+      { id: task.id, updates: { status: lastAction.prevStatus as any } },
+      {
+        onSuccess: () => {
+          toast({ title: "Undone ✅", description: "Status reverted back." });
+          setLastAction(null);
+        },
+      }
+    );
   };
 
   // Combine existing folders from tasks and explicit board folders
@@ -1266,28 +1258,29 @@ function TaskModal({
                       <div className="flex gap-3">
                         <Button
                           onClick={() => handleReviewAction("go_for_change", "✏️ Go for Change")}
-                          disabled={updateTask.isPending || !!undoPending}
+                          disabled={updateTask.isPending}
                           className="flex-1 h-11 rounded-xl font-bold text-sm bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-md shadow-orange-500/20"
                         >
                           {updateTask.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "✏️ Go for Change"}
                         </Button>
                         <Button
                           onClick={() => handleReviewAction("dont_go", "🚫 Don't Go")}
-                          disabled={updateTask.isPending || !!undoPending}
+                          disabled={updateTask.isPending}
                           className="flex-1 h-11 rounded-xl font-bold text-sm bg-red-500 hover:bg-red-600 text-white border-0 shadow-md shadow-red-500/20"
                         >
                           {updateTask.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "🚫 Don't Go"}
                         </Button>
                       </div>
-                      {/* Undo hint — only appears after clicking Go for Change or Don't Go */}
-                      {undoPending && (
+                      {/* Undo — permanent after click, stays until undone or modal closes */}
+                      {lastAction && (
                         <div className="flex items-center justify-center gap-1.5 pt-0.5">
-                          <span className="text-[11px] text-yellow-600 font-medium">⏳ Saving in 5s — clicked by mistake?</span>
+                          <span className="text-[11px] text-muted-foreground">Clicked by mistake?</span>
                           <button
                             onClick={handleUndo}
-                            className="text-[11px] font-bold text-yellow-700 underline underline-offset-2 hover:text-yellow-900 transition-colors"
+                            disabled={updateTask.isPending}
+                            className="text-[11px] font-bold text-primary underline underline-offset-2 hover:opacity-70 transition-opacity disabled:opacity-40"
                           >
-                            Undo
+                            {updateTask.isPending ? "Reverting…" : "Undo"}
                           </button>
                         </div>
                       )}
