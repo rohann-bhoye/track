@@ -18,8 +18,9 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     
-    // We expect { description, proofLink } roughly.
-    // For Wallxy, we force companyName = "Wallxy", status = "in_progress" (unassigned = no assignee but is fresh)
+    // We expect { description, proofLink, assignee, status } roughly.
+    // If an assignee is provided, auto-set status to "in_progress" so task goes directly to their column.
+    const assignee = body.assignee && body.assignee !== "none" ? body.assignee : null;
     const newTask = {
       companyName: "Wallxy",
       taskDate: new Date().toISOString().split('T')[0],
@@ -28,8 +29,8 @@ export async function POST(req: Request) {
       proofLinks: body.proofLinks || [],
       screenshotGroups: body.screenshotGroups || [],
       boardFolder: body.boardFolder || null,
-      status: "in_list", 
-      assignee: null,
+      status: assignee ? "in_progress" : "in_list",
+      assignee: assignee,
       dateOfJoin: "",
     };
 
