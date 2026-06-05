@@ -348,7 +348,7 @@ export default function WallxyDashboard() {
             transition={{ delay: 0.2 }}
             className="w-full bg-card border border-border/50 shadow-sm rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-6 md:p-8 z-10 relative overflow-hidden"
           >
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 border-b border-border/50 pb-5">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 border-b border-border/50 pb-5">
               <h2 className="text-xl md:text-2xl font-bold font-display text-foreground flex items-center gap-3">
                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner border border-primary/20">
                   <Inbox className="w-5 h-5 md:w-6 md:h-6" />
@@ -356,9 +356,33 @@ export default function WallxyDashboard() {
                 Task List
               </h2>
               <div className="flex flex-wrap items-center justify-center gap-3 w-full sm:w-auto">
-                <div className="h-12 flex items-center px-5 rounded-xl border border-primary/20 bg-primary/5 text-primary text-xs font-bold uppercase tracking-widest min-w-[100px] justify-center">
-                  {unassigned.length} Tasks
-                </div>
+                {/* Stats: Total / Done / % */}
+                {(() => {
+                  const allWallxy = filteredTasks || [];
+                  const totalCount = allWallxy.length;
+                  const doneCount = allWallxy.filter(t => t.status === "completed").length;
+                  const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+                  return (
+                    <div className="flex items-center gap-2">
+                      <div className="h-12 flex flex-col items-center justify-center px-4 rounded-xl border border-primary/20 bg-primary/5 min-w-[90px]">
+                        <span className="text-primary font-black text-sm leading-none">{totalCount}</span>
+                        <span className="text-[9px] uppercase tracking-widest text-primary/60 font-bold mt-0.5">Total</span>
+                      </div>
+                      <div className="h-12 flex flex-col items-center justify-center px-4 rounded-xl border border-green-500/30 bg-green-500/8 min-w-[90px]">
+                        <span className="text-green-600 font-black text-sm leading-none">{doneCount}</span>
+                        <span className="text-[9px] uppercase tracking-widest text-green-600/70 font-bold mt-0.5">Work Done</span>
+                      </div>
+                      <div className="h-12 flex flex-col items-center justify-center px-4 rounded-xl border border-border/40 bg-muted/30 min-w-[80px] relative overflow-hidden">
+                        <div
+                          className="absolute inset-0 bg-primary/10 transition-all duration-700 ease-out origin-left"
+                          style={{ transform: `scaleX(${pct / 100})` }}
+                        />
+                        <span className="relative text-foreground font-black text-sm leading-none">{pct}%</span>
+                        <span className="relative text-[9px] uppercase tracking-widest text-muted-foreground font-bold mt-0.5">Progress</span>
+                      </div>
+                    </div>
+                  );
+                })()}
                 <CreateMemberModal companyName="Wallxy" />
                 <Button onClick={() => setShowCreateModal(true)} className="rounded-xl h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">
                   <Plus className="w-4 h-4 mr-2" /> New Task
@@ -1246,9 +1270,30 @@ function TaskModal({
           )}
 
           {isCompleted ? (
-            <div className="bg-green-500/10 border border-green-500/20 p-5 rounded-[1.5rem]">
-              <p className="text-green-700 dark:text-green-400 font-bold">Completed by {task.assignee}</p>
-              {task.comment && <p className="mt-2 italic">"{task.comment}"</p>}
+            <div className="space-y-3">
+              <div className="bg-green-500/10 border border-green-500/20 p-5 rounded-[1.5rem]">
+                <p className="text-green-700 dark:text-green-400 font-bold">Completed by {task.assignee}</p>
+                {task.comment && <p className="mt-2 italic text-sm text-muted-foreground">"{task.comment}"</p>}
+              </div>
+              {/* Undo Completed — revert back to in_progress */}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  updateTask.mutate(
+                    { id: task.id, updates: { status: "in_progress" } },
+                    {
+                      onSuccess: () => {
+                        toast({ title: "↩️ Task Reverted", description: "Task moved back to In Progress." });
+                        onClose();
+                      },
+                    }
+                  );
+                }}
+                disabled={updateTask.isPending}
+                className="w-full h-11 rounded-xl font-bold border-amber-400/40 text-amber-600 hover:bg-amber-50 hover:border-amber-400 dark:hover:bg-amber-950/30 transition-all"
+              >
+                {updateTask.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "↩️ Undo — Move Back to In Progress"}
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">
