@@ -483,6 +483,14 @@ export default function WallxyDashboard() {
             {members.map((member, i) => {
               const memberTasks = assigned[member] || [];
               const completedCount = memberTasks.filter(t => t.status === "completed").length;
+
+              // Apply filter to what's shown in the grid
+              const displayMemberTasks = taskFilter === "completed"
+                ? memberTasks.filter(t => t.status === "completed")
+                : taskFilter === "incomplete"
+                  ? memberTasks.filter(t => t.status !== "completed")
+                  : memberTasks;
+
               return (
                 <motion.div 
                   initial={{ opacity: 0, y: 30 }}
@@ -523,10 +531,10 @@ export default function WallxyDashboard() {
                     </div>
                   </div>
                   <TaskGrid 
-                    tasks={memberTasks} 
+                    tasks={displayMemberTasks} 
                     onSelect={setSelectedTask} 
                     compact 
-                    emptyText="No tasks assigned" 
+                    emptyText={taskFilter === "completed" ? "No completed tasks" : taskFilter === "incomplete" ? "All tasks done! 🎉" : "No tasks assigned"} 
                     onDropFile={handleMagicUpload} 
                     onDeleteTask={setTaskToDelete}
                   />
