@@ -37,6 +37,7 @@ export function useCreateWallxyTask() {
       proofLinks?: string[];
       screenshotGroups?: any[];
       boardFolder?: string;
+      assignee?: string;
     }) => {
       const res = await apiRequest("POST", "/api/wallxy/tasks", task);
       return res.json();

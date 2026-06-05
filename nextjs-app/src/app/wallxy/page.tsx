@@ -537,6 +537,7 @@ export default function WallxyDashboard() {
       {showCreateModal && (
         <CreateTaskModal 
           folders={folders}
+          members={members}
           onClose={() => setShowCreateModal(false)} 
         />
       )}
@@ -544,6 +545,7 @@ export default function WallxyDashboard() {
       {showDropModal && (
         <CreateTaskModal 
           folders={folders}
+          members={members}
           onClose={() => setShowDropModal(false)} 
           initialGroups={pendingDropGroups} 
         />
@@ -1350,11 +1352,12 @@ function TaskModal({
   );
 }
 
-function CreateTaskModal({ onClose, folders = [], initialGroups = [] }: { onClose: () => void; folders?: string[]; initialGroups?: any[] }) {
+function CreateTaskModal({ onClose, folders = [], members = [], initialGroups = [] }: { onClose: () => void; folders?: string[]; members?: string[]; initialGroups?: any[] }) {
   const createTask = useCreateWallxyTask();
   const createFolder = useCreateBoardFolder();
   const { toast } = useToast();
   const [description, setDescription] = useState("");
+  const [assignee, setAssignee] = useState("");
   const [screenshotGroups, setScreenshotGroups] = useState<any[]>(initialGroups.length > 0 ? initialGroups : [{ folderName: "Screenshots", urls: [] }]);
   const [boardFolder, setBoardFolder] = useState("");
   const [errors, setErrors] = useState<Record<string, boolean>>({});
@@ -1421,7 +1424,8 @@ function CreateTaskModal({ onClose, folders = [], initialGroups = [] }: { onClos
     createTask.mutate({ 
       description, 
       screenshotGroups, 
-      boardFolder: boardFolder === "none" ? "" : boardFolder 
+      boardFolder: boardFolder === "none" ? "" : boardFolder,
+      assignee: (assignee && assignee !== "none") ? assignee : undefined,
     }, {
       onSuccess: () => {
         toast({ title: "Created!", description: "Task added to " + (boardFolder || "Board") });
@@ -1525,6 +1529,24 @@ function CreateTaskModal({ onClose, folders = [], initialGroups = [] }: { onClos
               )}
             </AnimatePresence>
           </div>
+
+          {/* Assign User */}
+          {members.length > 0 && (
+            <div className="space-y-3">
+              <label className="text-[11px] uppercase tracking-widest text-primary font-bold ml-1">Assign User</label>
+              <Select value={assignee} onValueChange={setAssignee}>
+                <SelectTrigger className="h-12 rounded-2xl bg-muted/5">
+                  <SelectValue placeholder="Unassigned (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Unassigned</SelectItem>
+                  {members.map(m => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-4 pt-2">
             <label className="text-[11px] uppercase tracking-widest text-primary font-bold ml-1">Screenshots</label>
