@@ -1426,6 +1426,7 @@ function CreateTaskModal({ onClose, folders = [], members = [], initialGroups = 
       screenshotGroups, 
       boardFolder: boardFolder === "none" ? "" : boardFolder,
       assignee: (assignee && assignee !== "none") ? assignee : undefined,
+      status: (assignee && assignee !== "none") ? "in_progress" : undefined,
     }, {
       onSuccess: () => {
         toast({ title: "Created!", description: "Task added to " + (boardFolder || "Board") });

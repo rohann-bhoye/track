@@ -38,6 +38,7 @@ export function useCreateWallxyTask() {
       screenshotGroups?: any[];
       boardFolder?: string;
       assignee?: string;
+      status?: string;
     }) => {
       const res = await apiRequest("POST", "/api/wallxy/tasks", task);
       return res.json();
