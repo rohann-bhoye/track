@@ -40,6 +40,7 @@ export default function WallxyDashboard() {
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [folderToDelete, setFolderToDelete] = useState<BoardFolder | null>(null);
   const [activeFolder, setActiveFolder] = useState<string>("All Work");
+  const [taskFilter, setTaskFilter] = useState<"all" | "incomplete" | "completed">("all");
   const [previewData, setPreviewData] = useState<{ urls: string[], index: number } | null>(null);
   
   // New modal state
@@ -390,13 +391,67 @@ export default function WallxyDashboard() {
               </div>
             </div>
             
-            <TaskGrid 
-              tasks={unassigned} 
-              onSelect={setSelectedTask} 
-              emptyText="All tasks are assigned!" 
-              onDropFile={handleMagicUpload}
-              onDeleteTask={setTaskToDelete}
-            />
+            {/* Filter Tabs */}
+            <div className="flex items-center gap-2 mb-5">
+              {([
+                { key: "all", label: "All", color: "primary" },
+                { key: "incomplete", label: "Incomplete", color: "amber" },
+                { key: "completed", label: "Completed", color: "green" },
+              ] as const).map(({ key, label, color }) => {
+                const isActive = taskFilter === key;
+                const colorMap = {
+                  primary: isActive
+                    ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20"
+                    : "border-primary/20 text-primary hover:bg-primary/5",
+                  amber: isActive
+                    ? "bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20"
+                    : "border-amber-400/30 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20",
+                  green: isActive
+                    ? "bg-green-500 text-white border-green-500 shadow-md shadow-green-500/20"
+                    : "border-green-500/30 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20",
+                };
+                // Count for badge
+                const allFT = filteredTasks || [];
+                const countMap = {
+                  all: allFT.filter(t => !t.assignee || t.status === "completed").length,
+                  incomplete: allFT.filter(t => !t.assignee && t.status !== "completed" && t.status !== "review").length,
+                  completed: allFT.filter(t => t.status === "completed").length,
+                };
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setTaskFilter(key)}
+                    className={`h-9 px-4 rounded-xl border font-bold text-xs uppercase tracking-widest transition-all flex items-center gap-2 ${colorMap[color]}`}
+                  >
+                    {label}
+                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                      isActive ? "bg-white/20" : "bg-current/10 opacity-60"
+                    }`}>{countMap[key]}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {(() => {
+              const allFT = filteredTasks || [];
+              const displayTasks = taskFilter === "completed"
+                ? allFT.filter(t => t.status === "completed")
+                : taskFilter === "incomplete"
+                  ? unassigned  // already excludes completed
+                  : [
+                      ...unassigned,
+                      ...allFT.filter(t => t.status === "completed"),
+                    ];
+              return (
+                <TaskGrid
+                  tasks={displayTasks}
+                  onSelect={setSelectedTask}
+                  emptyText={taskFilter === "completed" ? "No completed tasks yet!" : taskFilter === "incomplete" ? "No incomplete tasks — great job! 🎉" : "All tasks are assigned!"}
+                  onDropFile={handleMagicUpload}
+                  onDeleteTask={setTaskToDelete}
+                />
+              );
+            })()}
           </motion.div>
 
           {/* This spacer creates the line effect on desktop but stacks clearly on mobile */}
