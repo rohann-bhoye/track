@@ -350,90 +350,96 @@ export default function WallxyDashboard() {
             transition={{ delay: 0.2 }}
             className="w-full bg-card border border-border/50 shadow-sm rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-6 md:p-8 z-10 relative overflow-hidden"
           >
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 border-b border-border/50 pb-5">
-              <h2 className="text-xl md:text-2xl font-bold font-display text-foreground flex items-center gap-3">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner border border-primary/20">
-                  <Inbox className="w-5 h-5 md:w-6 md:h-6" />
+            {/* ── Header Row ── */}
+            <div className="flex flex-col gap-3 mb-6 border-b border-border/50 pb-5">
+              {/* Top line: Title + Actions */}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold font-display text-foreground flex items-center gap-2 sm:gap-3">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl sm:rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner border border-primary/20 shrink-0">
+                    <Inbox className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                  </div>
+                  Task List
+                </h2>
+                <div className="flex items-center gap-2">
+                  <CreateMemberModal companyName="Wallxy" />
+                  <Button onClick={() => setShowCreateModal(true)} className="rounded-xl h-9 sm:h-12 px-3 sm:px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">
+                    <Plus className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">New Task</span>
+                  </Button>
                 </div>
-                Task List
-              </h2>
-              <div className="flex flex-wrap items-center justify-center gap-3 w-full sm:w-auto">
-                {/* Stats: Total / Done / % */}
-                {(() => {
-                  const allWallxy = filteredTasks || [];
-                  const totalCount = allWallxy.length;
-                  const doneCount = allWallxy.filter(t => t.status === "completed").length;
-                  const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
-                  return (
-                    <div className="flex items-center gap-2">
-                      <div className="h-12 flex flex-col items-center justify-center px-4 rounded-xl border border-primary/20 bg-primary/5 min-w-[90px]">
-                        <span className="text-primary font-black text-sm leading-none">{totalCount}</span>
-                        <span className="text-[9px] uppercase tracking-widest text-primary/60 font-bold mt-0.5">Total</span>
-                      </div>
-                      <div className="h-12 flex flex-col items-center justify-center px-4 rounded-xl border border-green-500/30 bg-green-500/8 min-w-[90px]">
-                        <span className="text-green-600 font-black text-sm leading-none">{doneCount}</span>
-                        <span className="text-[9px] uppercase tracking-widest text-green-600/70 font-bold mt-0.5">Work Done</span>
-                      </div>
-                      <div className="h-12 flex flex-col items-center justify-center px-4 rounded-xl border border-border/40 bg-muted/30 min-w-[80px] relative overflow-hidden">
-                        <div
-                          className="absolute inset-0 bg-primary/10 transition-all duration-700 ease-out origin-left"
-                          style={{ transform: `scaleX(${pct / 100})` }}
-                        />
-                        <span className="relative text-foreground font-black text-sm leading-none">{pct}%</span>
-                        <span className="relative text-[9px] uppercase tracking-widest text-muted-foreground font-bold mt-0.5">Progress</span>
-                      </div>
-                    </div>
-                  );
-                })()}
-                <CreateMemberModal companyName="Wallxy" />
-                <Button onClick={() => setShowCreateModal(true)} className="rounded-xl h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20">
-                  <Plus className="w-4 h-4 mr-2" /> New Task
-                </Button>
               </div>
+              {/* Stats chips row */}
+              {(() => {
+                const allWallxy = filteredTasks || [];
+                const totalCount = allWallxy.length;
+                const doneCount = allWallxy.filter(t => t.status === "completed").length;
+                const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+                return (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="h-10 sm:h-12 flex flex-col items-center justify-center px-3 sm:px-4 rounded-xl border border-primary/20 bg-primary/5 min-w-[72px] sm:min-w-[90px]">
+                      <span className="text-primary font-black text-sm leading-none">{totalCount}</span>
+                      <span className="text-[8px] sm:text-[9px] uppercase tracking-widest text-primary/60 font-bold mt-0.5">Total</span>
+                    </div>
+                    <div className="h-10 sm:h-12 flex flex-col items-center justify-center px-3 sm:px-4 rounded-xl border border-green-500/30 bg-green-500/8 min-w-[72px] sm:min-w-[90px]">
+                      <span className="text-green-600 font-black text-sm leading-none">{doneCount}</span>
+                      <span className="text-[8px] sm:text-[9px] uppercase tracking-widest text-green-600/70 font-bold mt-0.5">Work Done</span>
+                    </div>
+                    <div className="h-10 sm:h-12 flex flex-col items-center justify-center px-3 sm:px-4 rounded-xl border border-border/40 bg-muted/30 min-w-[68px] sm:min-w-[80px] relative overflow-hidden">
+                      <div
+                        className="absolute inset-0 bg-primary/10 transition-all duration-700 ease-out origin-left"
+                        style={{ transform: `scaleX(${pct / 100})` }}
+                      />
+                      <span className="relative text-foreground font-black text-sm leading-none">{pct}%</span>
+                      <span className="relative text-[8px] sm:text-[9px] uppercase tracking-widest text-muted-foreground font-bold mt-0.5">Progress</span>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
             
-            {/* Filter Tabs */}
-            <div className="flex items-center gap-2 mb-5">
-              {([
-                { key: "all", label: "All", color: "primary" },
-                { key: "incomplete", label: "Incomplete", color: "amber" },
-                { key: "completed", label: "Completed", color: "green" },
-              ] as const).map(({ key, label, color }) => {
-                const isActive = taskFilter === key;
-                const colorMap = {
-                  primary: isActive
-                    ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20"
-                    : "border-primary/20 text-primary hover:bg-primary/5",
-                  amber: isActive
-                    ? "bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20"
-                    : "border-amber-400/30 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20",
-                  green: isActive
-                    ? "bg-green-500 text-white border-green-500 shadow-md shadow-green-500/20"
-                    : "border-green-500/30 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20",
-                };
-                // Count for badge
-                const allFT = filteredTasks || [];
-                const countMap = {
-                  all: allFT.filter(t => !t.assignee || t.status === "completed").length,
-                  incomplete: allFT.filter(t => !t.assignee && t.status !== "completed" && t.status !== "review").length,
-                  completed: allFT.filter(t => t.status === "completed").length,
-                };
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setTaskFilter(key)}
-                    className={`h-9 px-4 rounded-xl border font-bold text-xs uppercase tracking-widest transition-all flex items-center gap-2 ${colorMap[color]}`}
-                  >
-                    {label}
-                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
-                      isActive ? "bg-white/20" : "bg-current/10 opacity-60"
-                    }`}>{countMap[key]}</span>
-                  </button>
-                );
-              })}
+            {/* ── Filter Tabs — horizontal scroll on mobile ── */}
+            <div className="-mx-1 px-1 overflow-x-auto scrollbar-none">
+              <div className="flex items-center gap-2 mb-4 w-max min-w-full">
+                {([
+                  { key: "all", label: "All", color: "primary" },
+                  { key: "incomplete", label: "Incomplete", color: "amber" },
+                  { key: "completed", label: "Completed", color: "green" },
+                ] as const).map(({ key, label, color }) => {
+                  const isActive = taskFilter === key;
+                  const colorMap = {
+                    primary: isActive
+                      ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20"
+                      : "border-primary/20 text-primary hover:bg-primary/5",
+                    amber: isActive
+                      ? "bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20"
+                      : "border-amber-400/30 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20",
+                    green: isActive
+                      ? "bg-green-500 text-white border-green-500 shadow-md shadow-green-500/20"
+                      : "border-green-500/30 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20",
+                  };
+                  const allFT = filteredTasks || [];
+                  const countMap = {
+                    all: allFT.filter(t => !t.assignee || t.status === "completed").length,
+                    incomplete: allFT.filter(t => !t.assignee && t.status !== "completed" && t.status !== "review").length,
+                    completed: allFT.filter(t => t.status === "completed").length,
+                  };
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setTaskFilter(key)}
+                      className={`h-9 px-3 sm:px-4 rounded-xl border font-bold text-[11px] sm:text-xs uppercase tracking-widest transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap ${colorMap[color]}`}
+                    >
+                      {label}
+                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
+                        isActive ? "bg-white/20" : "bg-current/10 opacity-60"
+                      }`}>{countMap[key]}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Date Filter Row — always visible, adapts per tab */}
+            {/* ── Date Filter Row — horizontal scroll on mobile ── */}
             {(() => {
               const isCompleted = taskFilter === "completed";
               const isIncomplete = taskFilter === "incomplete";
@@ -443,30 +449,32 @@ export default function WallxyDashboard() {
               const inactiveCls = isCompleted ? "border-green-500/25 text-green-700 hover:bg-green-500/10" : isIncomplete ? "border-amber-400/25 text-amber-700 hover:bg-amber-500/10" : "border-primary/20 text-primary hover:bg-primary/5";
               const dateLabel = isCompleted ? "Completed" : "Created";
               return (
-                <div className={`flex flex-wrap items-center gap-2 mb-4 p-3 border rounded-2xl transition-colors ${rowBg}`}>
-                  <span className={`text-[10px] uppercase tracking-widest font-black mr-1 ${labelColor}`}>
-                    📅 {dateLabel}:
-                  </span>
-                  {([
-                    { key: "today",     label: "Today" },
-                    { key: "yesterday", label: "Yesterday" },
-                    { key: "week",      label: "Last 7 Days" },
-                    { key: "month",     label: "Last 30 Days" },
-                    { key: "all",       label: "All Time" },
-                  ] as const).map(({ key, label }) => {
-                    const isActive = dateFilter === key;
-                    return (
-                      <button
-                        key={key}
-                        onClick={() => setDateFilter(key)}
-                        className={`h-8 px-3 rounded-xl border text-[11px] font-bold uppercase tracking-widest transition-all ${
-                          isActive ? activeCls : inactiveCls
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
+                <div className={`-mx-1 px-1 overflow-x-auto scrollbar-none mb-4`}>
+                  <div className={`flex items-center gap-2 p-2.5 sm:p-3 border rounded-2xl transition-colors w-max min-w-full ${rowBg}`}>
+                    <span className={`text-[10px] uppercase tracking-widest font-black mr-1 shrink-0 ${labelColor}`}>
+                      📅 <span className="hidden xs:inline">{dateLabel}:</span>
+                    </span>
+                    {([
+                      { key: "today",     label: "Today" },
+                      { key: "yesterday", label: "Yesterday" },
+                      { key: "week",      label: "Last 7 Days" },
+                      { key: "month",     label: "Last 30 Days" },
+                      { key: "all",       label: "All Time" },
+                    ] as const).map(({ key, label }) => {
+                      const isActive = dateFilter === key;
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => setDateFilter(key)}
+                          className={`h-7 sm:h-8 px-2.5 sm:px-3 rounded-xl border text-[10px] sm:text-[11px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
+                            isActive ? activeCls : inactiveCls
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               );
             })()}
