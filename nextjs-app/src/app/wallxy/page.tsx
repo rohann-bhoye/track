@@ -41,6 +41,7 @@ export default function WallxyDashboard() {
   const [folderToDelete, setFolderToDelete] = useState<BoardFolder | null>(null);
   const [activeFolder, setActiveFolder] = useState<string>("All Work");
   const [taskFilter, setTaskFilter] = useState<"all" | "incomplete" | "completed">("all");
+  const [dateFilter, setDateFilter] = useState<"today" | "yesterday" | "week" | "month" | "all">("all");
   const [previewData, setPreviewData] = useState<{ urls: string[], index: number } | null>(null);
   
   // New modal state
@@ -432,12 +433,60 @@ export default function WallxyDashboard() {
               })}
             </div>
 
+            {/* Date Filter Row — only shown when Completed tab is active */}
+            {taskFilter === "completed" && (
+              <div className="flex flex-wrap items-center gap-2 mb-4 p-3 bg-green-500/5 border border-green-500/15 rounded-2xl">
+                <span className="text-[10px] uppercase tracking-widest font-black text-green-600/70 mr-1">📅 Period:</span>
+                {([
+                  { key: "today",     label: "Today" },
+                  { key: "yesterday", label: "Yesterday" },
+                  { key: "week",      label: "Last 7 Days" },
+                  { key: "month",     label: "Last 30 Days" },
+                  { key: "all",       label: "All Time" },
+                ] as const).map(({ key, label }) => {
+                  const isActive = dateFilter === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setDateFilter(key)}
+                      className={`h-8 px-3 rounded-xl border text-[11px] font-bold uppercase tracking-widest transition-all ${
+                        isActive
+                          ? "bg-green-500 text-white border-green-500 shadow-sm"
+                          : "border-green-500/25 text-green-700 hover:bg-green-500/10"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             {(() => {
               const allFT = filteredTasks || [];
+
+              // Helper: check if a date falls in the selected period
+              const inDateRange = (d: Date | null | undefined): boolean => {
+                if (!d) return dateFilter === "all";
+                const now = new Date();
+                const taskDay = new Date(d);
+                const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const startOfYesterday = new Date(startOfToday); startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+                const endOfYesterday = new Date(startOfToday);
+                if (dateFilter === "today") return taskDay >= startOfToday;
+                if (dateFilter === "yesterday") return taskDay >= startOfYesterday && taskDay < endOfYesterday;
+                if (dateFilter === "week") { const d7 = new Date(startOfToday); d7.setDate(d7.getDate() - 7); return taskDay >= d7; }
+                if (dateFilter === "month") { const d30 = new Date(startOfToday); d30.setDate(d30.getDate() - 30); return taskDay >= d30; }
+                return true; // "all"
+              };
+
+              const applyDateFilter = (tasks: typeof allFT) =>
+                taskFilter === "completed" ? tasks.filter(t => inDateRange(t.completedAt ?? t.createdAt)) : tasks;
+
               const displayTasks = taskFilter === "completed"
-                ? allFT.filter(t => t.status === "completed")
+                ? applyDateFilter(allFT.filter(t => t.status === "completed"))
                 : taskFilter === "incomplete"
-                  ? unassigned  // already excludes completed
+                  ? unassigned
                   : [
                       ...unassigned,
                       ...allFT.filter(t => t.status === "completed"),
@@ -446,7 +495,7 @@ export default function WallxyDashboard() {
                 <TaskGrid
                   tasks={displayTasks}
                   onSelect={setSelectedTask}
-                  emptyText={taskFilter === "completed" ? "No completed tasks yet!" : taskFilter === "incomplete" ? "No incomplete tasks — great job! 🎉" : "All tasks are assigned!"}
+                  emptyText={taskFilter === "completed" ? `No completed tasks for this period` : taskFilter === "incomplete" ? "No incomplete tasks — great job! 🎉" : "All tasks are assigned!"}
                   onDropFile={handleMagicUpload}
                   onDeleteTask={setTaskToDelete}
                 />
@@ -485,8 +534,25 @@ export default function WallxyDashboard() {
               const completedCount = memberTasks.filter(t => t.status === "completed").length;
 
               // Apply filter to what's shown in the grid
+              const applyMemberDateFilter = (tasks: typeof memberTasks) => {
+                if (taskFilter !== "completed") return tasks;
+                const now = new Date();
+                const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const startOfYesterday = new Date(startOfToday); startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+                const endOfYesterday = new Date(startOfToday);
+                return tasks.filter(t => {
+                  const d = t.completedAt ? new Date(t.completedAt) : (t.createdAt ? new Date(t.createdAt) : null);
+                  if (!d) return dateFilter === "all";
+                  if (dateFilter === "today") return d >= startOfToday;
+                  if (dateFilter === "yesterday") return d >= startOfYesterday && d < endOfYesterday;
+                  if (dateFilter === "week") { const d7 = new Date(startOfToday); d7.setDate(d7.getDate() - 7); return d >= d7; }
+                  if (dateFilter === "month") { const d30 = new Date(startOfToday); d30.setDate(d30.getDate() - 30); return d >= d30; }
+                  return true;
+                });
+              };
+
               const displayMemberTasks = taskFilter === "completed"
-                ? memberTasks.filter(t => t.status === "completed")
+                ? applyMemberDateFilter(memberTasks.filter(t => t.status === "completed"))
                 : taskFilter === "incomplete"
                   ? memberTasks.filter(t => t.status !== "completed")
                   : memberTasks;
