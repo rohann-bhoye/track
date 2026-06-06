@@ -1389,7 +1389,7 @@ function TaskModal({
             <DialogTitle className="text-2xl font-display font-bold text-foreground flex gap-3 items-center">
               <Briefcase className="w-6 h-6 text-primary" /> Task Details
             </DialogTitle>
-            <div className="flex flex-col items-end gap-1 shrink-0">
+            <div className="flex flex-col items-end gap-1 shrink-0 pr-8">
               {task.createdBy && (
                 <span className="text-[10px] font-bold text-primary/80 bg-primary/10 px-2 py-0.5 rounded-lg flex items-center gap-1">
                   👤 Added by {task.createdBy}
