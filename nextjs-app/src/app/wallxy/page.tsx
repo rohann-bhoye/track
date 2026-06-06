@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Briefcase, CheckCircle2, Inbox, SearchX, Loader2, 
+  Briefcase, CheckCircle2, Inbox, SearchX, Loader2, Search,
   Image as ImageIcon, ExternalLink, Plus, UserPlus,
   UploadCloud, Sparkles, Eye, EyeOff, Zap, X, UserMinus, Trash2, FolderOpen, Folder
 } from "lucide-react";
@@ -42,6 +42,7 @@ export default function WallxyDashboard() {
   const [activeFolder, setActiveFolder] = useState<string>("All Work");
   const [taskFilter, setTaskFilter] = useState<"all" | "incomplete" | "completed">("all");
   const [dateFilter, setDateFilter] = useState<"today" | "yesterday" | "week" | "month" | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [previewData, setPreviewData] = useState<{ urls: string[], index: number } | null>(null);
   
   // New modal state
@@ -358,6 +359,22 @@ export default function WallxyDashboard() {
                 Task List
               </h2>
               <div className="flex flex-wrap items-center justify-center gap-3 w-full sm:w-auto">
+                {/* Search bar — desktop only */}
+                <div className="hidden md:flex items-center gap-2 h-10 px-3 rounded-xl border border-border/50 bg-muted/30 focus-within:border-primary/50 focus-within:bg-background transition-all w-56">
+                  <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Search tasks..."
+                    className="bg-transparent text-sm flex-1 outline-none placeholder:text-muted-foreground/60 text-foreground"
+                  />
+                  {searchQuery && (
+                    <button onClick={() => setSearchQuery("")} className="text-muted-foreground hover:text-foreground transition-colors">
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
                 {/* Stats: Total / Done / % */}
                 {(() => {
                   const allWallxy = filteredTasks || [];
@@ -498,14 +515,21 @@ export default function WallxyDashboard() {
               const completedInRange = allFT.filter(t => t.status === "completed" && inDateRange(t));
               const unassignedInRange = unassigned.filter(t => inDateRange(t));
 
-              const displayTasks = taskFilter === "completed"
+              // Apply search
+              const q = searchQuery.trim().toLowerCase();
+              const matchesSearch = (t: (typeof allFT)[0]) =>
+                !q || (t.description || "").toLowerCase().includes(q);
+
+              const displayTasks = (taskFilter === "completed"
                 ? completedInRange
                 : taskFilter === "incomplete"
                   ? unassignedInRange
                   : [
                       ...unassignedInRange,
                       ...allFT.filter(t => t.status === "completed" && inDateRange(t)),
-                    ];
+                    ]
+              ).filter(matchesSearch);
+
               const emptyMsg = taskFilter === "completed"
                 ? `No completed tasks${dateFilter !== "all" ? " for this period" : ""}`
                 : taskFilter === "incomplete"
@@ -514,7 +538,7 @@ export default function WallxyDashboard() {
               return (
                 <TaskGrid
                   tasks={displayTasks}
-                  onSelect={setSelectedTask}
+                  onSelect={t => { setSelectedTask(t); }}
                   emptyText={emptyMsg}
                   onDropFile={handleMagicUpload}
                   onDeleteTask={setTaskToDelete}
@@ -660,34 +684,63 @@ export default function WallxyDashboard() {
         </div>
       </main>
 
-      {selectedTask && (
-        <TaskModal 
-          task={selectedTask} 
-          members={members} 
-          onClose={() => setSelectedTask(null)} 
-          onPreview={(urls, index) => setPreviewData({ urls, index })} 
-          onNext={(() => {
-            const currentList = tasks?.filter(t => {
-              if (selectedTask.status === "review") return t.status === "review";
-              if (!selectedTask.assignee) return !t.assignee && t.status !== "review" && t.status !== "completed";
-              return t.assignee === selectedTask.assignee && t.status !== "review";
-            }) || [];
-            const idx = currentList.findIndex(t => t.id === selectedTask.id);
-            if (idx < currentList.length - 1) return () => setSelectedTask(currentList[idx + 1]);
-            return undefined;
-          })()}
-          onPrev={(() => {
-            const currentList = tasks?.filter(t => {
-              if (selectedTask.status === "review") return t.status === "review";
-              if (!selectedTask.assignee) return !t.assignee && t.status !== "review" && t.status !== "completed";
-              return t.assignee === selectedTask.assignee && t.status !== "review";
-            }) || [];
-            const idx = currentList.findIndex(t => t.id === selectedTask.id);
-            if (idx > 0) return () => setSelectedTask(currentList[idx - 1]);
-            return undefined;
-          })()}
-        />
-      )}
+      {selectedTask && (() => {
+        // Build the navigation list from the SAME filtered set currently shown on screen
+        const allFT = filteredTasks || [];
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const startOfYesterday = new Date(startOfToday); startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+        const endOfYesterday = new Date(startOfToday);
+        const inRange = (t: Task) => {
+          if (dateFilter === "all") return true;
+          const raw = taskFilter === "completed" ? (t.completedAt ?? t.createdAt) : t.createdAt;
+          const d = raw ? new Date(raw) : null;
+          if (!d) return false;
+          if (dateFilter === "today") return d >= startOfToday;
+          if (dateFilter === "yesterday") return d >= startOfYesterday && d < endOfYesterday;
+          if (dateFilter === "week") { const d7 = new Date(startOfToday); d7.setDate(d7.getDate() - 7); return d >= d7; }
+          if (dateFilter === "month") { const d30 = new Date(startOfToday); d30.setDate(d30.getDate() - 30); return d >= d30; }
+          return true;
+        };
+        const q = searchQuery.trim().toLowerCase();
+        const matchesSearch = (t: Task) => !q || (t.description || "").toLowerCase().includes(q);
+
+        // Build the same list as what's shown in the TaskGrid
+        let navList: Task[];
+        if (selectedTask.status === "review") {
+          navList = reviewTasks;
+        } else if (selectedTask.assignee) {
+          // In member column — navigate within that member's filtered tasks
+          const memberTasks = allFT.filter(t => t.assignee === selectedTask.assignee);
+          navList = taskFilter === "completed"
+            ? memberTasks.filter(t => t.status === "completed" && inRange(t))
+            : taskFilter === "incomplete"
+              ? memberTasks.filter(t => t.status !== "completed" && inRange(t))
+              : memberTasks.filter(t => inRange(t));
+        } else {
+          // In task list (unassigned) section
+          const completedInRange = allFT.filter(t => t.status === "completed" && inRange(t));
+          const unassignedInRange = unassigned.filter(t => inRange(t));
+          const baseList = taskFilter === "completed"
+            ? completedInRange
+            : taskFilter === "incomplete"
+              ? unassignedInRange
+              : [...unassignedInRange, ...completedInRange];
+          navList = baseList.filter(matchesSearch);
+        }
+
+        const idx = navList.findIndex(t => t.id === selectedTask.id);
+        return (
+          <TaskModal
+            task={selectedTask}
+            members={members}
+            onClose={() => setSelectedTask(null)}
+            onPreview={(urls, index) => setPreviewData({ urls, index })}
+            onNext={idx < navList.length - 1 ? () => setSelectedTask(navList[idx + 1]) : undefined}
+            onPrev={idx > 0 ? () => setSelectedTask(navList[idx - 1]) : undefined}
+          />
+        );
+      })()}
       
       {memberToDelete && (
         <DeleteMemberDialog 
