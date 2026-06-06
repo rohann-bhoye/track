@@ -39,6 +39,7 @@ export function useCreateWallxyTask() {
       boardFolder?: string;
       assignee?: string;
       status?: string;
+      createdBy?: string;
     }) => {
       const res = await apiRequest("POST", "/api/wallxy/tasks", task);
       return res.json();

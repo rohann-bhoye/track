@@ -23,6 +23,7 @@ export const insertTaskSchema = z.object({
   screenshotGroups: z.array(screenshotGroupSchema).optional(),
   nextWeekPlan: z.string().nullable().optional(),
   assignee: z.string().nullable().optional(),
+  createdBy: z.string().nullable().optional(),
 });
 
 // Full Task shape as stored in / returned from Firebase
@@ -48,6 +49,7 @@ export const taskSchema = z.object({
   assignee: z.string().nullable().optional(),
   comment: z.string().nullable().optional(),
   boardFolder: z.string().optional().nullable(),
+  createdBy: z.string().nullable().optional(),
 });
 
 export const createTasksBulkRequestSchema = z.object({

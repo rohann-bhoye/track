@@ -21,6 +21,7 @@ export async function POST(req: Request) {
     // We expect { description, proofLink, assignee, status } roughly.
     // If an assignee is provided, auto-set status to "in_progress" so task goes directly to their column.
     const assignee = body.assignee && body.assignee !== "none" ? body.assignee : null;
+    const createdBy = body.createdBy && body.createdBy !== "none" ? body.createdBy : null;
     const newTask = {
       companyName: "Wallxy",
       taskDate: new Date().toISOString().split('T')[0],
@@ -31,6 +32,7 @@ export async function POST(req: Request) {
       boardFolder: body.boardFolder || null,
       status: assignee ? "in_progress" : "in_list",
       assignee: assignee,
+      createdBy: createdBy,
       dateOfJoin: "",
     };
 

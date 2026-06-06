@@ -1112,10 +1112,11 @@ function TaskGrid({ tasks, onSelect, compact = false, emptyText, onDropFile, onD
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-[9px] uppercase tracking-widest text-green-600 dark:text-green-400 font-bold flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3" /> Done
+                      {task.createdBy && <span className="text-green-500/70 normal-case tracking-normal font-medium ml-1">by {task.createdBy}</span>}
                     </span>
-                    {task.createdAt && (
-                      <span className="text-[9px] text-muted-foreground/50 font-medium">
-                        {format(new Date(task.createdAt), "MMM d")}
+                    {(task.completedAt || task.createdAt) && (
+                      <span className="text-[9px] text-green-600/60 dark:text-green-400/60 font-medium">
+                        ✓ {format(new Date((task.completedAt || task.createdAt)!), "MMM d, h:mm a")}
                       </span>
                     )}
                   </div>
@@ -1162,7 +1163,8 @@ function TaskGrid({ tasks, onSelect, compact = false, emptyText, onDropFile, onD
                       {task.createdAt && (
                         <p className="text-[10px] text-muted-foreground/60 font-medium mt-1.5 flex items-center gap-1">
                           <ExternalLink className="w-2.5 h-2.5 opacity-40" />
-                          {format(new Date(task.createdAt), "MMM d, h:mm a")}
+                          Added {format(new Date(task.createdAt), "MMM d, h:mm a")}
+                          {task.createdBy && <span className="ml-1 text-primary/60 font-semibold">by {task.createdBy}</span>}
                         </p>
                       )}
                     </div>
@@ -1382,10 +1384,29 @@ function TaskModal({
           )}
         </div>
 
-        <div className="p-6 border-b border-border/50 bg-muted/20">
-          <DialogTitle className="text-2xl font-display font-bold text-foreground flex gap-3 items-center">
-            <Briefcase className="w-6 h-6 text-primary" /> Task Details
-          </DialogTitle>
+        <div className="p-5 border-b border-border/50 bg-muted/20">
+          <div className="flex items-start justify-between gap-4">
+            <DialogTitle className="text-2xl font-display font-bold text-foreground flex gap-3 items-center">
+              <Briefcase className="w-6 h-6 text-primary" /> Task Details
+            </DialogTitle>
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              {task.createdBy && (
+                <span className="text-[10px] font-bold text-primary/80 bg-primary/10 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                  👤 Added by {task.createdBy}
+                </span>
+              )}
+              {task.createdAt && (
+                <span className="text-[10px] text-muted-foreground/70 font-medium flex items-center gap-1">
+                  📅 Created: {format(new Date(task.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                </span>
+              )}
+              {task.completedAt && (
+                <span className="text-[10px] text-green-600/80 font-bold flex items-center gap-1">
+                  ✓ Completed: {format(new Date(task.completedAt), "MMM d, yyyy 'at' h:mm a")}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
         <div className="p-6 md:p-8 space-y-8 overflow-y-auto max-h-[85vh] custom-scrollbar">
           {/* Top Section: Project and Description */}
@@ -1477,8 +1498,23 @@ function TaskModal({
           {isCompleted ? (
             <div className="space-y-3">
               <div className="bg-green-500/10 border border-green-500/20 p-5 rounded-[1.5rem]">
-                <p className="text-green-700 dark:text-green-400 font-bold">Completed by {task.assignee}</p>
-                {task.comment && <p className="mt-2 italic text-sm text-muted-foreground">"{task.comment}"</p>}
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-green-700 dark:text-green-400 font-bold">Completed by {task.assignee}</p>
+                    {task.comment && <p className="mt-2 italic text-sm text-muted-foreground">"{task.comment}"</p>}
+                  </div>
+                  {task.completedAt && (
+                    <div className="text-right shrink-0">
+                      <p className="text-[10px] uppercase tracking-widest text-green-600/60 font-black">✓ Done</p>
+                      <p className="text-[11px] text-green-700 dark:text-green-400 font-bold mt-0.5">
+                        {format(new Date(task.completedAt), "MMM d, yyyy")}
+                      </p>
+                      <p className="text-[10px] text-green-600/70 font-medium">
+                        {format(new Date(task.completedAt), "h:mm a")}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
               {/* Undo Completed — revert back to in_progress */}
               <Button
@@ -1608,6 +1644,12 @@ function CreateTaskModal({ onClose, folders = [], members = [], initialGroups = 
   const { toast } = useToast();
   const [description, setDescription] = useState("");
   const [assignee, setAssignee] = useState("");
+  const [createdBy, setCreatedBy] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("wallxy_created_by") || "";
+    }
+    return "";
+  });
   const [screenshotGroups, setScreenshotGroups] = useState<any[]>(initialGroups.length > 0 ? initialGroups : [{ folderName: "Screenshots", urls: [] }]);
   const [boardFolder, setBoardFolder] = useState("");
   const [errors, setErrors] = useState<Record<string, boolean>>({});
@@ -1671,12 +1713,18 @@ function CreateTaskModal({ onClose, folders = [], members = [], initialGroups = 
     }
     setErrors({});
 
+    // Remember the creator in localStorage
+    if (createdBy && createdBy !== "none") {
+      localStorage.setItem("wallxy_created_by", createdBy);
+    }
+
     createTask.mutate({ 
       description, 
       screenshotGroups, 
       boardFolder: boardFolder === "none" ? "" : boardFolder,
       assignee: (assignee && assignee !== "none") ? assignee : undefined,
       status: (assignee && assignee !== "none") ? "in_progress" : undefined,
+      createdBy: (createdBy && createdBy !== "none") ? createdBy : undefined,
     }, {
       onSuccess: () => {
         toast({ title: "Created!", description: "Task added to " + (boardFolder || "Board") });
@@ -1780,6 +1828,27 @@ function CreateTaskModal({ onClose, folders = [], members = [], initialGroups = 
               )}
             </AnimatePresence>
           </div>
+
+          {/* Created By */}
+          {members.length > 0 && (
+            <div className="space-y-3">
+              <label className="text-[11px] uppercase tracking-widest text-primary font-bold ml-1">Created By (You)</label>
+              <Select value={createdBy} onValueChange={val => { setCreatedBy(val); if (val && val !== "none") localStorage.setItem("wallxy_created_by", val); }}>
+                <SelectTrigger className="h-12 rounded-2xl bg-primary/5 border-primary/20">
+                  <SelectValue placeholder="Who is creating this?" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Anonymous</SelectItem>
+                  {members.map(m => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {createdBy && createdBy !== "none" && (
+                <p className="text-[10px] text-muted-foreground/60 ml-1">💾 Remembered on this device</p>
+              )}
+            </div>
+          )}
 
           {/* Assign User */}
           {members.length > 0 && (
