@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ClipboardList, Building2, Briefcase, SearchX, BarChart3, Lock, Loader2, ChevronsDown } from "lucide-react";
+import { ClipboardList, Building2, Briefcase, SearchX, BarChart3, Lock, Loader2, ChevronsDown, Handshake } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 
@@ -281,6 +281,15 @@ export default function Home() {
               <TrashModal />
               <SetNextWeekPlanModal />
               <CreateTaskModal />
+              <Link href="/meet-tracker" className="w-full lg:w-auto">
+                <Button
+                  variant="outline"
+                  className="h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest w-full px-4 border-border/60"
+                >
+                  <Handshake className="w-4 h-4 mr-2" />
+                  Meet Tracker
+                </Button>
+              </Link>
               {hasTasks && (
                 <Link href="/report" className="w-full lg:w-auto">
                   <Button 
